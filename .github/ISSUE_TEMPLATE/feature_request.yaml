@@ -1,0 +1,19 @@
+name: Feature Request
+description: Request a Feature
+title: "[Feature Request]: "
+labels: ["enhancement", "triage"]
+assignees:
+  - mlucio
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: desired-behavior
+    attributes:
+      label: Desired Behavior
+      description: What behavior did you want?
+      placeholder: Tell us what you wanted to see!
+    validations:
+      required: true
