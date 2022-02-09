@@ -50,3 +50,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+e4e_sleep_timer_fw/Debug/
+.metadata/
