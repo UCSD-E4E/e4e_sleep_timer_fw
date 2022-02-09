@@ -26,7 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <product.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,6 +105,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#if E4E_APPLICATION_LOGIC == MAIN_APP_LOGIC
+	  // main app logic
+#elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
+	  // debug logic
+#elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
+	  // debug logic
+#elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC
+	  // debug logic
+#elif E4E_APPLICATION_LOGIC == CMD_DEBUG_LOGIC
+	  // debug logic
+#elif E4E_APPLICATION_LOGIC == APP_DEBUG_LOGIC
+	  // debug logic
+#endif
   }
   /* USER CODE END 3 */
 }
