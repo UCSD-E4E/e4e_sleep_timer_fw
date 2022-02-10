@@ -27,6 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <product.h>
+#include <E4E_HAL_System.h>
+#include <e4e_common.h>
+#include <E4E_ST_App.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+E4E_ST_AppDesc_t app;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,7 +70,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	E4E_ST_AppConfig_t appConfig;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,6 +98,13 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  if(E4E_ERROR == E4E_HAL_System_init())
+  {
+	  while(1)
+	  {
+
+	  }
+  }
 
   /* USER CODE END 2 */
 
@@ -106,7 +116,18 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 #if E4E_APPLICATION_LOGIC == MAIN_APP_LOGIC
-	  // main app logic
+	  if(E4E_ERROR == E4E_ST_App_init(&app, &appConfig))
+	  {
+		  while(1)
+		  {
+			  ;
+		  }
+	  }
+
+	  while(1)
+	  {
+		  E4E_ST_App_run(&app);
+	  }
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
