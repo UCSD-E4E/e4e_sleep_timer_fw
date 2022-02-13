@@ -12,25 +12,49 @@
 #include <stdint.h>
 
 /**
+ * Serial Configuration Structure
+ */
+typedef struct E4E_HAL_SerialConfig_ {
+	E4E_Serial_Mode_e serial_mode;
+	int timeout;
+	/**
+	 * Stuff that may be needed:
+	 *  - interrupt vs dma
+	 *  - buffer pointer
+	 *  - size of buffer
+	 */
+} E4E_HAL_SerialConfig_t;
+
+/**
  * Serial Driver Descriptor
  */
 typedef struct E4E_HAL_SerialDesc_ {
 	/**
 	 * Underlying HAL Descriptor
 	 */
-	void *pHalDesc;
+	UART_HandleTypeDef *uartHandle;
+
 	/**
 	 * Attribute Descriptor
 	 */
-	void *pAttrDesc;
+	E4E_HAL_Serial_Config_t *pAttrDesc;
+
+	/**
+	 * Attributes that may be needed:
+	 *  - device?
+	 *  - read buffer
+	 *  - read buffer size
+	 *  - interrupt vs dma
+	 */
+
+
 } E4E_HAL_SerialDesc_t;
 
-/**
- * Serial Configuration Structure
- */
-typedef struct E4E_HAL_SerialConfig_ {
-	int dummy;
-} E4E_HAL_SerialConfig_t;
+typedef enum E4E_Serial_Mode_ {
+	E4E_Serial_Polling,
+	E4E_Serial_IT,
+	E4E_Serial_DMA
+} E4E_Serial_Mode_e;
 
 /**
  * Serial Device Enumerators
