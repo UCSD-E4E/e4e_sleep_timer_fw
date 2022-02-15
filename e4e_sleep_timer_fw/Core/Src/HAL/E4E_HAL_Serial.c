@@ -7,7 +7,6 @@
 
 #include <E4E_HAL_Serial.h>
 #include <e4e_common.h>
-#include "usart.h"
 
 /**
  * @internal This function should initialize the serial driver descriptor with
@@ -58,14 +57,15 @@ int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 
 int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
 		size_t nBytes, uint32_t timeout) {
+	uint8_t * pBuf = (uint8_t *) pData;
 	switch(pDesc->pAttrDesc->serial_mode) {
 	case E4E_Serial_Polling:
-		return (HAL_OK == HAL_UART_Transmit(pDesc->uartHandle, pBuffer, count, pDesc->pAttrDesc->timeout))
+		return (HAL_OK == HAL_UART_Transmit(pDesc->uartHandle, pBuf, nBytes, pDesc->pAttrDesc->timeout))
 				? E4E_OK : E4E_ERROR;
 	case E4E_Serial_IT:
-		return (HAL_OK == HAL_UART_Transmit_IT(pDesc->uartHandle, pBuffer,count)) ? E4E_OK : E4E_ERROR;
+		return (HAL_OK == HAL_UART_Transmit_IT(pDesc->uartHandle, pBuf, nBytes)) ? E4E_OK : E4E_ERROR;
 	case E4E_Serial_DMA:
-		return (HAL_OK == HAL_UART_Transmit_DMA(pDesc->uartHandle, pBuffer, count)) ? E4E_OK: E4E_ERROR;
+		return (HAL_OK == HAL_UART_Transmit_DMA(pDesc->uartHandle, pBuf, nBytes)) ? E4E_OK: E4E_ERROR;
 	default: return E4E_ERROR;
 	}
 }

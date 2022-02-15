@@ -10,6 +10,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "usart.h"
+
+typedef enum E4E_Serial_Mode_ {
+	E4E_Serial_Polling,
+	E4E_Serial_IT,
+	E4E_Serial_DMA
+} E4E_Serial_Mode_e;
 
 /**
  * Serial Configuration Structure
@@ -37,7 +44,7 @@ typedef struct E4E_HAL_SerialDesc_ {
 	/**
 	 * Attribute Descriptor
 	 */
-	E4E_HAL_Serial_Config_t *pAttrDesc;
+	E4E_HAL_SerialConfig_t *pAttrDesc;
 
 	/**
 	 * Attributes that may be needed:
@@ -50,11 +57,6 @@ typedef struct E4E_HAL_SerialDesc_ {
 
 } E4E_HAL_SerialDesc_t;
 
-typedef enum E4E_Serial_Mode_ {
-	E4E_Serial_Polling,
-	E4E_Serial_IT,
-	E4E_Serial_DMA
-} E4E_Serial_Mode_e;
 
 /**
  * Serial Device Enumerators
