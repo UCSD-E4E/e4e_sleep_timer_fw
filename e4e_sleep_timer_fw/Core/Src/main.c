@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "iwdg.h"
 #include "lptim.h"
 #include "usart.h"
 #include "rtc.h"
@@ -30,6 +29,7 @@
 #include <E4E_HAL_System.h>
 #include <e4e_common.h>
 #include <E4E_ST_App.h>
+#include <stm32g0xx.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,7 +92,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_IWDG_Init();
   MX_LPTIM1_Init();
   MX_LPUART1_UART_Init();
   MX_USART1_UART_Init();
@@ -100,7 +99,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   if(E4E_ERROR == E4E_HAL_System_init())
   {
-	  while(1)
+	  while(0)
 	  {
 
 	  }
@@ -138,6 +137,8 @@ int main(void)
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == APP_DEBUG_LOGIC
 	  // debug logic
+#elif E4E_APPLICATION_LOGIC == DEBUG_APP_LOGIC
+	  E4E_DebugApp();
 #endif
   }
   /* USER CODE END 3 */
@@ -162,13 +163,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI
-                              |RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
