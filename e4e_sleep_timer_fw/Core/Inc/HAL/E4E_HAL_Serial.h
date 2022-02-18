@@ -24,12 +24,6 @@ typedef enum E4E_Serial_Mode_ {
 typedef struct E4E_HAL_SerialConfig_ {
 	E4E_Serial_Mode_e serial_mode;
 	int timeout;
-	/**
-	 * Stuff that may be needed:
-	 *  - interrupt vs dma
-	 *  - buffer pointer
-	 *  - size of buffer
-	 */
 } E4E_HAL_SerialConfig_t;
 
 /**
@@ -45,16 +39,6 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 * Attribute Descriptor
 	 */
 	E4E_HAL_SerialConfig_t *pAttrDesc;
-
-	/**
-	 * Attributes that may be needed:
-	 *  - device?
-	 *  - read buffer
-	 *  - read buffer size
-	 *  - interrupt vs dma
-	 */
-
-
 } E4E_HAL_SerialDesc_t;
 
 
