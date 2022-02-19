@@ -7,12 +7,11 @@
 
 #include <E4E_HAL_System.h>
 #include <e4e_common.h>
-
 E4E_HAL_System_t halSystem, *pHalSystem = &halSystem;
 
 int E4E_HAL_System_init(void)
 {
-	E4E_HAL_SerialConfig_t serialConfig;
+	E4E_HAL_SerialConfig_t serialConfig = { E4E_Serial_Polling, 50 };
 	E4E_HAL_RTCConfig_t rtcConfig;
 	E4E_HAL_PWRCTRLConfig_t pwrConfig;
 

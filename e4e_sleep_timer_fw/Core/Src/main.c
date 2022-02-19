@@ -128,6 +128,23 @@ int main(void)
 		  E4E_ST_App_run(&app);
 	  }
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
+	  /*
+	  while(1) {
+	  	if (E4E_ERROR == E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc, "asdf", 4, 50)) {
+	  		while (1) {
+	  			;
+	  		}
+	  	}
+	  }
+	  */
+	  /*
+	  uint8_t empty[1];
+	  while(1){
+		  if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc,&empty,1,50)){
+			  E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc, &empty, 1, 50);
+		  }
+	  }
+	  */
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
