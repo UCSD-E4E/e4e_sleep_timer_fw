@@ -71,6 +71,15 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	E4E_ST_AppConfig_t appConfig;
+	char time[60];
+	char date[60];
+	RTC_TimeTypeDef sTime;
+	RTC_DateTypeDef sDate;
+
+	sTime.SecondFraction = 2;
+
+	int64_t pDatetime = 1645250190758;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -97,6 +106,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  E4E_HAL_RTC_setTime(NULL, pDatetime);
+
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
@@ -130,7 +141,24 @@ int main(void)
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
-	  // debug logic
+
+//	  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+//	  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+//
+//	  sprintf(date, "Date: %d/%d/%d\t", sDate.Month, sDate.Date, sDate.Year);
+//	  sprintf(time, "Time: %d:%d:%d.%d\r\n", sTime.Hours, sTime.Minutes, sTime.Seconds, sTime.SubSeconds);
+//
+//	  HAL_UART_Transmit(&huart2, (uint8_t *) date, strlen(date), 300);
+//	  HAL_UART_Transmit(&huart2, (uint8_t *) time, strlen(time), 300);
+//	  HAL_Delay(1000);
+
+	  E4E_HAL_RTC_getTime(NULL, &pDatetime);
+
+	  sprintf(time, "Time (UNIX ms): %d", pDatetime);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *) time, strlen(time), 300);
+	  HAL_Delay(1000);
+
 #elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == CMD_DEBUG_LOGIC

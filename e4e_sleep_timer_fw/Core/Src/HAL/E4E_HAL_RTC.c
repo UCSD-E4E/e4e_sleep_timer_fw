@@ -5,8 +5,10 @@
  *      Author: ntlhui
  */
 
+#include <rtc.h>
 #include <E4E_HAL_RTC.h>
 #include <e4e_common.h>
+#include <time.h>
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
@@ -18,11 +20,60 @@ int E4E_HAL_RTC_deinit(E4E_HAL_RTCDesc_t *pDesc)
 }
 int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 {
-	return E4E_ERROR;
+	RTC_TimeTypeDef sTime;
+	RTC_DateTypeDef sDate;
+
+	sTime.SecondFraction = 2;
+
+	struct tm convertedTime;
+
+	if (HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+		return E4E_ERROR;
+	}
+
+	if (HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+		return E4E_ERROR;
+	}
+
+    convertedTime.tm_wday = sDate.WeekDay;
+    convertedTime.tm_mon  = sDate.Month - 1;
+    convertedTime.tm_mday = sDate.Date;
+    convertedTime.tm_year = sDate.Year + 100;
+
+    convertedTime.tm_hour = sTime.Hours;
+    convertedTime.tm_min  = sTime.Minutes;
+    convertedTime.tm_sec  = sTime.Seconds;
+
+    *pDatetime = (mktime(&convertedTime) * 1000) + sTime.SubSeconds;
+
+	return E4E_OK;
 }
 int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 {
-	return E4E_ERROR;
+	RTC_TimeTypeDef sTime;
+	RTC_DateTypeDef sDate;
+
+	struct tm* convertedTime = gmtime(datetime);
+
+	sTime.Hours = convertedTime->tm_hour;
+	sTime.Minutes = convertedTime->tm_min;
+	sTime.Seconds = convertedTime->tm_sec;
+	sTime.SubSeconds = datetime % 1000;
+
+	sDate.Year = convertedTime->tm_year;
+	sDate.Month = convertedTime->tm_mon;
+	sDate.Date = convertedTime->tm_mday;
+	sDate.WeekDay = convertedTime->tm_wday;
+
+	if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
+		return E4E_ERROR;
+	}
+	if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
+		return E4E_ERROR;
+	}
+
+
+	return E4E_OK;
 }
 int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 {
