@@ -100,8 +100,12 @@ int main(void)
   int64_t currTime = 0;
   E4E_HAL_RTCDesc_t pDesc;
   E4E_HAL_RTCConfig_t pConfig;
+  int64_t buf[70];
+  int64_t startTime = 1645556802030;
 
   E4E_HAL_RTC_init(&pDesc, &pConfig);
+
+  E4E_HAL_RTC_setTime(&pDesc, startTime);
 
   if(E4E_ERROR == E4E_HAL_System_init())
   {
@@ -136,13 +140,10 @@ int main(void)
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
-	  // debug logic
-	  //strcpy((char*)buf, "Hello\r\n");
-	  //HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
-	  currTime = E4E_HAL_RTC_getTime(&pDesc, &currTime);
-	  sprintf((char*)buf, "%d\r\n", currTime);
-	  HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
-	  HAL_Delay(500);
+
+	  E4E_HAL_RTC_getTime(&pDesc, &currTime);
+//	  sprintf((char*)buf," %d\r\n", currTime);
+//	  HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
 
 #elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC
 	  // debug logic
@@ -235,3 +236,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
