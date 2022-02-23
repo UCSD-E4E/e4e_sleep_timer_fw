@@ -97,12 +97,16 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+
   int64_t currTime = 0;
+  int64_t startTime = 1645583358829; 		//Arbitrary Value
+
   E4E_HAL_RTCDesc_t pDesc;
   E4E_HAL_RTCConfig_t pConfig;
 
   E4E_HAL_RTC_init(&pDesc, &pConfig);
 
+  E4E_HAL_RTC_setTime(&pDesc, startTime);
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
@@ -137,11 +141,7 @@ int main(void)
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
-	  //strcpy((char*)buf, "Hello\r\n");
-	  //HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
-	  currTime = E4E_HAL_RTC_getTime(&pDesc, &currTime);
-	  sprintf((char*)buf, "%d\r\n", currTime);
-	  HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+	  E4E_HAL_RTC_getTime(&pDesc, &currTime);
 	  HAL_Delay(500);
 
 #elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC

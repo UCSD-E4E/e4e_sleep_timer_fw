@@ -10,16 +10,16 @@
 #include <rtc.h>
 #include <e4e_common.h>
 #include <stdio.h>
+#include <usart.h>
 
+
+#define MS_TO_SEC 1000
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
+	//TODO: Only Initialize when pDesc and pConfig are null
 	pDesc->pHalDesc=&hrtc;
 
-//	if (HAL_RTC_Init(pDesc->pHalDesc) != HAL_OK)
-//	{
-//	    return E4E_ERROR;
-//	}
 	return E4E_OK;
 }
 int E4E_HAL_RTC_deinit(E4E_HAL_RTCDesc_t *pDesc)
@@ -32,7 +32,7 @@ int E4E_HAL_RTC_deinit(E4E_HAL_RTCDesc_t *pDesc)
 }
 int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 {
-
+	int buf[300];
 	RTC_TimeTypeDef sTime = {0};
 	RTC_DateTypeDef sDate = {0};
 	struct tm time;
@@ -46,37 +46,49 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 			return E4E_ERROR;
 	}
 
-	time.tm_year = sDate.Year;
-	time.tm_mon = sDate.Month;
-	time.tm_mday = sDate.Date;
+	time.tm_year = (uint8_t)(sDate.Year + 2000 - 1900);
+	time.tm_mon = (uint8_t)(sDate.Month - 1);
+	time.tm_mday = (uint8_t)sDate.Date;
 
-	time.tm_hour = sTime.Hours;
-	time.tm_min = sTime.Minutes;
-	time.tm_sec = sTime.Seconds;
+	time.tm_hour = (uint8_t)sTime.Hours;
+	time.tm_min = (uint8_t)sTime.Minutes;
+	time.tm_sec = (uint8_t)sTime.Seconds;
 
-	//Add Sub-Seconds
+	//TODO: Implement Sub-Seconds
 
+	*pDatetime = mktime(&time)*MS_TO_SEC;
 
-	*pDatetime = mktime(&time)*1000;
+	sprintf((char*)buf,"STM Time -  %d/%d/%d   %d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds);
+	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
 
 	return E4E_OK;
 }
 int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 {
+	//https://currentmillis.com/
+	//Use for Generating Time
+	int buf[50];
+
 	RTC_TimeTypeDef sTime;
 	RTC_DateTypeDef sDate;
 
-	struct tm time = *gmtime(datetime/1000);
+	time_t datetime_seconds = (time_t)(datetime/MS_TO_SEC);
+	struct tm time = *gmtime(&datetime_seconds);
 
-	sDate.Year = time.tm_year;
-	sDate.Month = time.tm_mon;
-	sDate.Date = time.tm_mday;
+	sDate.Year = (uint8_t)(time.tm_year + 1900 - 2000);
+	sDate.Month = (uint8_t)(time.tm_mon + 1);
+	sDate.Date = (uint8_t)time.tm_mday;
 
-	sTime.Hours = time.tm_hour;
-	sTime.Minutes = time.tm_min;
-	sTime.Seconds = time.tm_sec;
+	sTime.Hours = (uint8_t)time.tm_hour;
+	sTime.Minutes = (uint8_t)time.tm_min;
+	sTime.Seconds = (uint8_t)time.tm_sec;
 
-	//Add Sub-Seconds
+	//TODO: Implement Sub-Seconds
+
+
+	sprintf((char*)buf,"Start Date: %d/%d/%d Time: %d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds);
+	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+
 
 	if(HAL_RTC_SetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN) != HAL_OK){
 		return E4E_ERROR;
@@ -85,8 +97,6 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	if(HAL_RTC_SetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN) != HAL_OK){
 		return E4E_ERROR;
 	}
-
-
 
 	return E4E_OK;
 }
