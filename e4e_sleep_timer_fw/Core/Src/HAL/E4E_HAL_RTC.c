@@ -17,7 +17,7 @@
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
-	//TODO: Only Initialize when pDesc and pConfig are null
+	//TODO: Finish Implementation
 	pDesc->pHalDesc=&hrtc;
 
 	return E4E_OK;
@@ -49,16 +49,18 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	time.tm_year = (uint8_t)(sDate.Year + 2000 - 1900);
 	time.tm_mon = (uint8_t)(sDate.Month - 1);
 	time.tm_mday = (uint8_t)sDate.Date;
+	time.tm_wday = (uint8_t)sDate.WeekDay;
 
 	time.tm_hour = (uint8_t)sTime.Hours;
 	time.tm_min = (uint8_t)sTime.Minutes;
 	time.tm_sec = (uint8_t)sTime.Seconds;
 
-	//TODO: Implement Sub-Seconds
+	//TODO: Verify Sub-Seconds works as expected
+	int sec_Fraction = (int)(((float)(sTime.SecondFraction - sTime.SubSeconds))/((float)sTime.SecondFraction+1)*MS_TO_SEC);
 
-	*pDatetime = mktime(&time)*MS_TO_SEC;
+	*pDatetime = mktime(&time)*MS_TO_SEC + sec_Fraction;
 
-	sprintf((char*)buf,"STM Time -  %d/%d/%d   %d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds);
+	sprintf((char*)buf,"STM Time -  %d/%d/%d   %d:%d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction);
 	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
 
 	return E4E_OK;
@@ -78,15 +80,21 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	sDate.Year = (uint8_t)(time.tm_year + 1900 - 2000);
 	sDate.Month = (uint8_t)(time.tm_mon + 1);
 	sDate.Date = (uint8_t)time.tm_mday;
+	sDate.WeekDay = (uint8_t)time.tm_wday;
 
 	sTime.Hours = (uint8_t)time.tm_hour;
 	sTime.Minutes = (uint8_t)time.tm_min;
 	sTime.Seconds = (uint8_t)time.tm_sec;
 
-	//TODO: Implement Sub-Seconds
+	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;		//Placeholder
+	sTime.SecondFraction = 255;
 
+	//TODO: Verify Sub-Seconds works as expected
+	int sec_Fraction = (datetime % MS_TO_SEC);
 
-	sprintf((char*)buf,"Start Date: %d/%d/%d Time: %d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds);
+	sTime.SubSeconds = sTime.SecondFraction - (float)sec_Fraction*(sTime.SecondFraction +1)/MS_TO_SEC;
+
+	sprintf((char*)buf,"Start Date: %d/%d/%d Time: %d:%d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds, sec_Fraction);
 	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
 
 
@@ -100,6 +108,8 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 
 	return E4E_OK;
 }
+
+//TODO:
 int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 {
 	if(HAL_RTC_SetAlarm(&hrtc, alarm, RTC_FORMAT_BIN) != HAL_OK){
@@ -107,6 +117,8 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	}
 	return E4E_OK;
 }
+
+//TODO:
 int E4E_HAL_RTC_clearAlarm(E4E_HAL_RTCDesc_t *pDesc)
 {
 	if(HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A) != HAL_OK){
@@ -114,6 +126,8 @@ int E4E_HAL_RTC_clearAlarm(E4E_HAL_RTCDesc_t *pDesc)
 	}
 	return E4E_OK;
 }
+
+//TODO:
 int E4E_HAL_RTC_registerAlarmCallback(E4E_HAL_RTCDesc_t *pDesc,
 		E4E_HAL_RTCAlarmCallback pCallback, void* pContext)
 {
