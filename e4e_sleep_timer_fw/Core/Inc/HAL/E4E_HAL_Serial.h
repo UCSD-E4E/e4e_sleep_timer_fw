@@ -23,7 +23,6 @@ typedef enum E4E_Serial_Mode_ {
  */
 typedef struct E4E_HAL_SerialConfig_ {
 	E4E_Serial_Mode_e serial_mode;
-	int timeout;
 } E4E_HAL_SerialConfig_t;
 
 /**
@@ -38,7 +37,7 @@ typedef struct E4E_HAL_SerialDesc_ {
 	/**
 	 * Attribute Descriptor
 	 */
-	E4E_HAL_SerialConfig_t *pAttrDesc;
+	E4E_Serial_Mode_e serial_mode;
 } E4E_HAL_SerialDesc_t;
 
 

@@ -26,7 +26,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		break;
 	default: return E4E_ERROR;
 	};
-	pDesc->pAttrDesc = pConfig;
+	pDesc->serial_mode = pConfig->serial_mode;
 	return E4E_OK;
 }
 
@@ -43,36 +43,32 @@ int E4E_HAL_Serial_deinit(E4E_HAL_SerialDesc_t *pDesc) {
  */
 int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 		size_t count, uint32_t timeout) {
-	uint8_t * pBuf = (uint8_t *) pBuffer;
 	if (pDesc == 0) return E4E_ERROR;
-	if (pDesc->pAttrDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
-    switch(pDesc->pAttrDesc->serial_mode) {
+    switch(pDesc->serial_mode) {
     case E4E_Serial_Polling:
-    	return (HAL_OK == HAL_UART_Receive(pDesc->uartHandle, pBuf, count, pDesc->pAttrDesc->timeout))
+    	return (HAL_OK == HAL_UART_Receive(pDesc->uartHandle, pBuffer, count, timeout))
     			? E4E_OK : E4E_ERROR;
     case E4E_Serial_IT:
-    	return (HAL_OK == HAL_UART_Receive_IT(pDesc->uartHandle, pBuf,count)) ? E4E_OK : E4E_ERROR;
+    	return (HAL_OK == HAL_UART_Receive_IT(pDesc->uartHandle, pBuffer,count)) ? E4E_OK : E4E_ERROR;
     case E4E_Serial_DMA:
-    	return (HAL_OK == HAL_UART_Receive_DMA(pDesc->uartHandle, pBuf, count)) ? E4E_OK: E4E_ERROR;
+    	return (HAL_OK == HAL_UART_Receive_DMA(pDesc->uartHandle, pBuffer, count)) ? E4E_OK: E4E_ERROR;
     default: return E4E_ERROR;
     }
 }
 
 int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
 		size_t nBytes, uint32_t timeout) {
-	uint8_t * pBuf = (uint8_t *) pData;
 	if (pDesc == 0) return E4E_ERROR;
-	if (pDesc->pAttrDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
-	switch(pDesc->pAttrDesc->serial_mode) {
+	switch(pDesc->serial_mode) {
 	case E4E_Serial_Polling:
-		return (HAL_OK == HAL_UART_Transmit(pDesc->uartHandle, pBuf, nBytes, pDesc->pAttrDesc->timeout))
+		return (HAL_OK == HAL_UART_Transmit(pDesc->uartHandle, pData, nBytes, timeout))
 				? E4E_OK : E4E_ERROR;
 	case E4E_Serial_IT:
-		return (HAL_OK == HAL_UART_Transmit_IT(pDesc->uartHandle, pBuf, nBytes)) ? E4E_OK : E4E_ERROR;
+		return (HAL_OK == HAL_UART_Transmit_IT(pDesc->uartHandle, pData, nBytes)) ? E4E_OK : E4E_ERROR;
 	case E4E_Serial_DMA:
-		return (HAL_OK == HAL_UART_Transmit_DMA(pDesc->uartHandle, pBuf, nBytes)) ? E4E_OK: E4E_ERROR;
+		return (HAL_OK == HAL_UART_Transmit_DMA(pDesc->uartHandle, pData, nBytes)) ? E4E_OK: E4E_ERROR;
 	default: return E4E_ERROR;
 	}
 }
@@ -100,4 +96,5 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 		rxBuffPtr++;
 	}
 
+	return E4E_OK;
 }
