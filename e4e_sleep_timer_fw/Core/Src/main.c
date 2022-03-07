@@ -97,16 +97,22 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  int testAlarmCallback(int64_t alarmTime, void* pContext);
 
   int64_t currTime = 0;
-  int64_t startTime = 1645583358829; 		//Arbitrary Value
-
+  int64_t startTime = 1645573800232; 		//Arbitrary Value
+  int64_t alarmTime = 1645573810000;
+  E4E_HAL_RTCAlarmCallback rtcAlarmCallback;
   E4E_HAL_RTCDesc_t pDesc;
   E4E_HAL_RTCConfig_t pConfig;
 
   E4E_HAL_RTC_init(&pDesc, &pConfig);
-
+  E4E_HAL_RTC_clearAlarm(&pDesc);
   E4E_HAL_RTC_setTime(&pDesc, startTime);
+
+  E4E_HAL_RTC_setAlarm(&pDesc, alarmTime);
+  E4E_HAL_RTC_registerAlarmCallback(&pDesc, &testAlarmCallback, NULL);
+
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
@@ -201,6 +207,16 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+int testAlarmCallback(int64_t alarmTime, void* pContext)
+{
+	int buf[50];
+	sprintf((char*)buf,"Alarm Callback\r\n");
+	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+
+	return E4E_OK;
+}
+
+
 
 /* USER CODE END 4 */
 

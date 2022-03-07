@@ -14,11 +14,17 @@
 
 
 #define MS_TO_SEC 1000
+void (*alarmCallbackFunction)();
+void (*alarmCallbackFunctionContext)();
+int64_t alarmTime;
+
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
 	//TODO: Finish Implementation
 	pDesc->pHalDesc=&hrtc;
+
+	//Attributes: secondFraction, alarm Mask(s), Daylight Savings,
 
 	return E4E_OK;
 }
@@ -86,7 +92,7 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	sTime.Minutes = (uint8_t)time.tm_min;
 	sTime.Seconds = (uint8_t)time.tm_sec;
 
-	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;		//Placeholder
+	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
 	sTime.SecondFraction = 255;
 
 	//TODO: Verify Sub-Seconds works as expected
@@ -109,16 +115,36 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	return E4E_OK;
 }
 
-//TODO:
 int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 {
-	if(HAL_RTC_SetAlarm(&hrtc, alarm, RTC_FORMAT_BIN) != HAL_OK){
+	RTC_TimeTypeDef sTime;
+	RTC_AlarmTypeDef sAlarm;
+	alarmTime = alarm;
+
+	time_t alarmtime_seconds = (time_t)(alarm/MS_TO_SEC);
+	struct tm time = *gmtime(&alarmtime_seconds);
+
+	sTime.Hours = time.tm_hour;
+	sTime.Minutes = time.tm_min;
+	sTime.Seconds = time.tm_sec;
+
+	int sec_Fraction = (alarm % MS_TO_SEC);
+	sTime.SubSeconds = sTime.SecondFraction - (float)sec_Fraction*(sTime.SecondFraction +1)/MS_TO_SEC;
+
+	sAlarm.Alarm = RTC_ALARM_A;
+	sAlarm.AlarmTime = sTime;
+	sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+	sAlarm.AlarmDateWeekDay = time.tm_mday;
+	sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
+	sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
+
+	if(HAL_RTC_SetAlarm_IT(pDesc->pHalDesc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK){
 		return E4E_ERROR;
 	}
 	return E4E_OK;
+
 }
 
-//TODO:
 int E4E_HAL_RTC_clearAlarm(E4E_HAL_RTCDesc_t *pDesc)
 {
 	if(HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A) != HAL_OK){
@@ -131,8 +157,22 @@ int E4E_HAL_RTC_clearAlarm(E4E_HAL_RTCDesc_t *pDesc)
 int E4E_HAL_RTC_registerAlarmCallback(E4E_HAL_RTCDesc_t *pDesc,
 		E4E_HAL_RTCAlarmCallback pCallback, void* pContext)
 {
-	return E4E_ERROR;
+	alarmCallbackFunction = pCallback;
+	alarmCallbackFunctionContext = pContext;
+	return E4E_OK;
 }
+
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
+{
+	int buf[50];
+	sprintf((char*)buf,"Alarm Triggered\r\n");
+	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+
+	(*alarmCallbackFunction)(&alarmTime, alarmCallbackFunctionContext);
+}
+
+
 /**
  * @internal This function should check the value of the RTC Backup registers.
  * The RTC backup registers should be set with some specific value to hold so
