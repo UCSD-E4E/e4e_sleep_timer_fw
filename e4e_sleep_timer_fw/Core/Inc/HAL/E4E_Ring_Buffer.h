@@ -54,11 +54,27 @@ int ring_buffer_put(RBuf_Desc_t rbt, const void *data);
 /*
  * Get a single element from the ring buffer
  * Arguments:
- * rbt - inddex of buffer in global array of ring buffers
+ * rbt - index of buffer in global array of ring buffers
  * data - pointer to location to store element
  */
 int ring_buffer_get(RBuf_Desc_t rbt, void *data);
 
+/*
+ * Get multiple elements from the ring buffer
+ * Arguments:
+ * rbt - index of buffer in global array of ring buffers
+ * data - pointer to location to store the data to
+ * count - number of elements to get from the ring buffer
+ */
+int ring_buffer_get_multiple(RBuf_Desc_t rbt, void *data, int count);
 
+/*
+ * Put multiple elements in the ring buffer
+ * Arguments:
+ * rbt - index of buffer in global array of ring buffers
+ * data - pointer to location to pull data from
+ * count - number of elements to add to ring buffer
+ */
+int ring_buffer_put_multiple(RBuf_Desc_t rbt, void *data, int count);
 
 #endif /* INC_HAL_E4E_RING_BUFFER_H_ */

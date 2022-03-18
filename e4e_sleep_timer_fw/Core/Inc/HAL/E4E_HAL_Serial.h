@@ -10,19 +10,18 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "usart.h"
+#include <usart.h>
+#include <E4E_Ring_Buffer.h>
 
-typedef enum E4E_Serial_Mode_ {
-	E4E_Serial_Polling,
-	E4E_Serial_IT,
-	E4E_Serial_DMA
-} E4E_Serial_Mode_e;
+#define RING_BUF_SIZE 128
+#define RX_BUF_SIZE 128
+
 
 /**
  * Serial Configuration Structure
  */
 typedef struct E4E_HAL_SerialConfig_ {
-	E4E_Serial_Mode_e serial_mode;
+	int dummy;
 } E4E_HAL_SerialConfig_t;
 
 /**
@@ -35,9 +34,21 @@ typedef struct E4E_HAL_SerialDesc_ {
 	UART_HandleTypeDef *uartHandle;
 
 	/**
-	 * Attribute Descriptor
+	 * Ring buffer descriptor
 	 */
-	E4E_Serial_Mode_e serial_mode;
+	RBuf_Desc_t ringBufDesc;
+
+	/**
+	 * Ring buffer memory
+	 */
+	uint16_t rbmem[RING_BUF_SIZE];
+
+	/**
+	 * Intermediate buffer for interrupts
+	 */
+	uint16_t tempRxBuf[RX_BUF_SIZE];
+
+	//function pointer to
 } E4E_HAL_SerialDesc_t;
 
 
@@ -49,6 +60,8 @@ typedef enum E4E_HAL_SerialDevice_ {
 	E4E_HAL_SerialDevice_Debug,  /**< Debug Port - USART1 */
 	E4E_HAL_SerialDevice__NELEMS /**< Number of Serial Ports */
 } E4E_HAL_SerialDevice_e;
+
+// TODO: add a static structure that maps UART_HandleTypeDef to its corresponding E4E_HAL_SerialDesc
 
 /**
  * @brief Initializes the Serial Driver

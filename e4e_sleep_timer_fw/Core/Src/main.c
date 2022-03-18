@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "lptim.h"
 #include "usart.h"
 #include "rtc.h"
@@ -95,15 +96,17 @@ int main(void)
   MX_LPTIM1_Init();
   MX_LPUART1_UART_Init();
   MX_USART1_UART_Init();
+  MX_DMA_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  /*
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
 	  {
 
 	  }
-  }
+  }*/
 
   /* USER CODE END 2 */
 
@@ -130,21 +133,38 @@ int main(void)
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
 	  /*
 	  while(1) {
-	  	if (E4E_ERROR == E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc, "asdf", 4, 50)) {
+	  	if (E4E_ERROR == E4E_HAL_Serial_write(&pHalSystem->debugSerialDesc, "asdf", 4, 50)) {
 	  		while (1) {
 	  			;
 	  		}
 	  	}
-	  }
-	  */
+	  }*/
+
+
+	  uint8_t empty[10];
 	  /*
-	  uint8_t empty[1];
 	  while(1){
 		  if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc,&empty,1,50)){
 			  E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc, &empty, 1, 50);
 		  }
 	  }
 	  */
+	  /*
+	  uint32_t timeOut = 50;
+	  uint8_t empty[1];
+		  while(1){
+			  if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->debugSerialDesc,&empty,2,timeOut)){
+				  E4E_HAL_Serial_write(&pHalSystem->debugSerialDesc, "F", 2, timeOut);
+			  }
+	  }
+	  */
+	  if (HAL_UART_Receive_IT(&hlpuart1, empty, 10) != HAL_OK) {
+		  __NOP();
+	  }
+
+	  while (1) {
+		  __NOP();
+	  }
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic

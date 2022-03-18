@@ -62,6 +62,29 @@ int ring_buffer_get(RBuf_Desc_t rbd, void *data) {
 	return err;
 }
 
+int ring_buffer_get_multiple(RBuf_Desc_t rbt, void *data, int count) {
+	for (int i = 0; i < count; i++) {
+		if (E4E_ERROR == ring_buffer_get(rbd, data+i)) {
+			// flush data buffer
+			memset(data, 0, i);
+
+			// need to do anything with ring buffer tail pointer?
+			return E4E_ERROR;
+		}
+	}
+	return E4E_OK;
+}
+
+int ring_buffer_put_multiple(RBuf_Desc_t rbt, const void *data, int count) {
+	for (int i = 0; i < count; i++) {
+		if (E4E_ERROR == ring_buffer_put(rbd, data+i)) {
+			// need to do anything with ring buffer head pointer?
+			return E4E_ERROR;
+		}
+	}
+	return E4E_OK;
+}
+
 
 static int ring_buffer_full(struct ring_buffer *rb) {
 	return ((rb->head - rb->tail) == rb->n_elem) ? 1 : 0;
