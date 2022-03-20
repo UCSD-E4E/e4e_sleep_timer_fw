@@ -41,12 +41,12 @@ typedef struct E4E_HAL_SerialDesc_ {
 	/**
 	 * Ring buffer memory
 	 */
-	uint16_t rbmem[RING_BUF_SIZE];
+	uint8_t rbmem[RING_BUF_SIZE];
 
 	/**
 	 * Intermediate buffer for interrupts
 	 */
-	uint16_t tempRxBuf[RX_BUF_SIZE];
+	uint8_t tempRxBuf[RX_BUF_SIZE];
 
 	//function pointer to
 } E4E_HAL_SerialDesc_t;
@@ -62,6 +62,17 @@ typedef enum E4E_HAL_SerialDevice_ {
 } E4E_HAL_SerialDevice_e;
 
 // TODO: add a static structure that maps UART_HandleTypeDef to its corresponding E4E_HAL_SerialDesc
+typedef struct E4E_UARTHandle_To_SerialDesc_ {
+	UART_HandleTypeDef *uartHandle;
+	E4E_HAL_SerialDesc_t *e4eSerialDesc;
+} E4E_UARTHandle_To_SerialDesc_t;
+
+/**
+ * @brief Gets a E4E_Hal_SerialDesc_t given its corresponding UART_HandleTypeDef
+ * @param huart The UART_HandleTypeDef as defined from the HAL
+ * @return The corresponding E4E_UARTHandle_To_SerialDesc_t as set in E4E_Hal_Serial_init
+ */
+E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart);
 
 /**
  * @brief Initializes the Serial Driver

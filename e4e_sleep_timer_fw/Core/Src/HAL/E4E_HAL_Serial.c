@@ -9,7 +9,17 @@
 #include <E4E_HAL_Serial.h>
 #include <e4e_common.h>
 
-// NOTE: need to add a lookup table to match STM HAL descriptors to E4E HAL descriptors
+E4E_UARTHandle_To_SerialDesc_t map_command, *pmap_command = &map_command;
+E4E_UARTHandle_To_SerialDesc_t map_debug, *pmap_debug = &map_debug;
+
+E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
+	if (huart == &hlpuart1) {
+		return pmap_command->e4eSerialDesc;
+	} else if (huart == &huart1) {
+		return pmap_debug->e4eSerialDesc;
+	}
+	return NULL;
+}
 
 /**
  * @internal This function should initialize the serial driver descriptor with
@@ -26,15 +36,17 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	case E4E_HAL_SerialDevice_Command:
 		// initialize the port for serial device
 		pDesc->uartHandle = &hlpuart1;
+		pmap_command->uartHandle = &hlpuart1;
+		pmap_command->e4eSerialDesc = pDesc;
 		break;
 	case E4E_HAL_SerialDevice_Debug:
 		// initialize the debug port
 		pDesc->uartHandle = &huart1;
+		pmap_debug->uartHandle = &huart1;
+		pmap_debug->e4eSerialDesc = pDesc;
 		break;
 	default: return E4E_ERROR;
 	};
-
-	// TODO: map uartHandle to pDesc with some structure
 
 	// if transmission uses interrupt or DMA mode, start collecting data right away
 	return (HAL_OK == HAL_UART_Receive_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
@@ -82,31 +94,38 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
  * receiving again
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	// TODO: get ring buffer descriptor and ring buffer data pointer from UART_HandleTypeDef -> E4E_HAL_SerialDesc_t map
-	// write to the ring buffer somehow
 	// how much to write to ring buffer? depends on how much data has been written in so far
-	int SHOULD_BE_RING_BUFFER_DESCRIPTOR = 0;
-	void *SHOULD_BE_RING_BUFFER_PTR;
-	ring_buffer_put_multiple(SHOULD_BE_RING_BUFFER_DESCRIPTOR, SHOULD_BE_RING_BUFFER_PTR, RX_BUF_SIZE >> 1);
+	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
+	if (serialDesc == NULL) {
+		// should theoretically never get here
+		return;
+	}
+
+	//TODO: find an internal read / write pointer for the rx buffer or define our own
+	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->tempRxBuf, RX_BUF_SIZE >> 1);
 
 	// is this call necessary? or does DMA operate continuously on circular mode?
 	HAL_UART_Receive_DMA(huart, huart->pRxBuffPtr, huart->RxXferSize);
 }
 
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
-	// TODO: get ring buffer descriptor and ring buffer data pointer from UART_HandleTypeDef -> E4E_HAL_SerialDesc_t map
-	// update ring buffer
-	int SHOULD_BE_RING_BUFFER_DESCRIPTOR = 0;
-	void *SHOULD_BE_RING_BUFFER_PTR;
-	ring_buffer_put_multiple(SHOULD_BE_RING_BUFFER_DESCRIPTOR, SHOULD_BE_RING_BUFFER_PTR, RX_BUF_SIZE >> 1);
+	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
+	if (serialDesc == NULL) {
+		// should theoretically never get here
+		return;
+	}
+	//TODO: find an internal read / write pointer for the rx buffer or define our own
+	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->tempRxBuf, RX_BUF_SIZE >> 1);
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
-	// TODO: get ring buffer descriptor and ring buffer data pointer from UART_HandleTypeDef -> E4E_HAL_SerialDesc_t map
-	// idle event, update ring buffer with size number of characters
-	int SHOULD_BE_RING_BUFFER_DESCRIPTOR = 0;
-	void *SHOULD_BE_RING_BUFFER_PTR;
-	// TODO: verify that size is the correct number of bytes to be writing to the ring buffer
-	ring_buffer_put_multiple(SHOULD_BE_RING_BUFFER_DESCRIPTOR, SHOULD_BE_RING_BUFFER_PTR, size);
+	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
+	if (serialDesc == NULL) {
+		// should theoretically never get here
+		return;
+	}
+	//TODO: find an internal read / write pointer for the rx buffer or define our own
+	//TODO: verify that size is the correct number of bytes to be writing to the ring buffer
+	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->tempRxBuf + (RX_BUF_SIZE >> 1), RX_BUF_SIZE >> 1);
 }
 

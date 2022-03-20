@@ -36,45 +36,45 @@ struct ring_buffer {
 /*
  * Initialize a ring buffer
  * Arguments:
- * rbt - index of buffer in global array of ring buffers (output, modified by function)
+ * rbd - index of buffer in global array of ring buffers (output, modified by function)
  * attr - attributes of this ring buffer
  *
  * Returns: E4E_ERROR or E4E_OK
  */
-int ring_buffer_init(RBuf_Desc_t *rbt, RBuf_Attr_t *attr);
+int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr);
 
 /*
  * Add a single element to the ring buffer
  * Arguments:
- * rbt - index of buffer in global array of ring buffers
+ * rbd - index of buffer in global array of ring buffers
  * data - pointer to data to add to ring buffer
  */
-int ring_buffer_put(RBuf_Desc_t rbt, const void *data);
+int ring_buffer_put(RBuf_Desc_t rbd, const void *data);
 
 /*
  * Get a single element from the ring buffer
  * Arguments:
- * rbt - index of buffer in global array of ring buffers
+ * rbd - index of buffer in global array of ring buffers
  * data - pointer to location to store element
  */
-int ring_buffer_get(RBuf_Desc_t rbt, void *data);
+int ring_buffer_get(RBuf_Desc_t rbd, void *data);
 
 /*
  * Get multiple elements from the ring buffer
  * Arguments:
- * rbt - index of buffer in global array of ring buffers
+ * rbd - index of buffer in global array of ring buffers
  * data - pointer to location to store the data to
  * count - number of elements to get from the ring buffer
  */
-int ring_buffer_get_multiple(RBuf_Desc_t rbt, void *data, int count);
+int ring_buffer_get_multiple(RBuf_Desc_t rbd, void *data, int count);
 
 /*
  * Put multiple elements in the ring buffer
  * Arguments:
- * rbt - index of buffer in global array of ring buffers
+ * rbd - index of buffer in global array of ring buffers
  * data - pointer to location to pull data from
  * count - number of elements to add to ring buffer
  */
-int ring_buffer_put_multiple(RBuf_Desc_t rbt, void *data, int count);
+int ring_buffer_put_multiple(RBuf_Desc_t rbd, const void *data, int count);
 
 #endif /* INC_HAL_E4E_RING_BUFFER_H_ */
