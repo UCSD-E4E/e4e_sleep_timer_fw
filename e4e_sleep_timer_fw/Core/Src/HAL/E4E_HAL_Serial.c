@@ -48,6 +48,8 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	default: return E4E_ERROR;
 	};
 
+	pDesc->readPtr = pDesc->tempRxBuf;
+	pDesc->writePtr = pDesc->tempRxBuf;
 	// if transmission uses interrupt or DMA mode, start collecting data right away
 	return (HAL_OK == HAL_UART_Receive_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
 }
@@ -100,10 +102,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 		// should theoretically never get here
 		return;
 	}
+	serialDesc->writePtr = serialDesc->tempRxBuf + RX_BUF_SIZE;
 
-	//TODO: find an internal read / write pointer for the rx buffer or define our own
-	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->tempRxBuf, RX_BUF_SIZE >> 1);
+	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->readPtr, serialDesc->writePtr - serialDesc->readPtr);
 
+	// reset both pointers to the beginning
+	serialDesc->readPtr = serialDesc->tempRxBuf;
+	serialDesc->writePtr = serialDesc->tempRxBuf;
 	// is this call necessary? or does DMA operate continuously on circular mode?
 	HAL_UART_Receive_DMA(huart, huart->pRxBuffPtr, huart->RxXferSize);
 }
@@ -114,8 +119,13 @@ void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
 		// should theoretically never get here
 		return;
 	}
-	//TODO: find an internal read / write pointer for the rx buffer or define our own
-	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->tempRxBuf, RX_BUF_SIZE >> 1);
+	// half complete, update writePtr to halfway point
+	serialDesc->writePtr = serialDesc->tempRxBuf + (RX_BUF_SIZE >> 1);
+
+	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->readPtr, serialDesc->writePtr - serialDesc->readPtr);
+
+	// update readPtr to writePtr position
+	serialDesc->readPtr = serialDesc->writePtr;
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
@@ -124,8 +134,12 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 		// should theoretically never get here
 		return;
 	}
-	//TODO: find an internal read / write pointer for the rx buffer or define our own
+	// idle, increment writePtr by however many bytes have been written
 	//TODO: verify that size is the correct number of bytes to be writing to the ring buffer
-	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->tempRxBuf + (RX_BUF_SIZE >> 1), RX_BUF_SIZE >> 1);
+	serialDesc->writePtr = serialDesc->writePtr + size;
+	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->readPtr, serialDesc->writePtr - serialDesc->readPtr);
+
+	// update readPtr to writePtr position
+	serialDesc->readPtr = serialDesc->writePtr;
 }
 

@@ -48,6 +48,9 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 */
 	uint8_t tempRxBuf[RX_BUF_SIZE];
 
+	uint8_t *readPtr;
+	uint8_t *writePtr;
+
 	//function pointer to
 } E4E_HAL_SerialDesc_t;
 
