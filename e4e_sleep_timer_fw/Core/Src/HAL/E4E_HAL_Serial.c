@@ -79,7 +79,7 @@ int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
 
 	// TODO: verify if we need to make a separate ring buffer for TX
-	return (HAL_OK == HAL_UART_Transmit_DMA(pDesc->uartHandle, pData, nBytes)) ? E4E_OK: E4E_ERROR;
+	return (HAL_OK == HAL_UART_Transmit_IT(pDesc->uartHandle, pData, nBytes)) ? E4E_OK: E4E_ERROR;
 }
 
 int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
@@ -99,7 +99,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	// how much to write to ring buffer? depends on how much data has been written in so far
 	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
 	if (serialDesc == NULL) {
-		// should theoretically never get here
+		// should theoretically ever get here
 		return;
 	}
 	serialDesc->writePtr = serialDesc->tempRxBuf + RX_BUF_SIZE;

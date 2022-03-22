@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 
-#define RING_BUFFER_MAX 1
+#define RING_BUFFER_MAX 2
 
 /*
  * Note: n_elem should be restricted to a power of 2 for computational efficiency

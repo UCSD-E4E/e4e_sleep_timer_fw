@@ -31,6 +31,7 @@
 #include <e4e_common.h>
 #include <E4E_ST_App.h>
 #include <stm32g0xx.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,14 +100,14 @@ int main(void)
   MX_DMA_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-  /*
+
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
 	  {
 
 	  }
-  }*/
+  }
 
   /* USER CODE END 2 */
 
@@ -131,17 +132,34 @@ int main(void)
 		  E4E_ST_App_run(&app);
 	  }
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
+	  uint8_t data[] = "p";
+	  uint8_t i = 0;
+	  //uint8_t UART1_rxBuffer[12];
 	  /*
-	  while(1) {
-	  	if (E4E_ERROR == E4E_HAL_Serial_write(&pHalSystem->debugSerialDesc, "asdf", 4, 50)) {
-	  		while (1) {
-	  			;
-	  		}
+	  if (E4E_ERROR
+	  			== E4E_HAL_Serial_init(&pHalSystem->commandSerialDesc,
+	  					E4E_HAL_SerialDevice_Command, &serialConfig))
+	  	{
+	  		return  0;
 	  	}
-	  }*/
+	  	if (E4E_ERROR
+	  			== E4E_HAL_Serial_init(&pHalSystem->debugSerialDesc,
+	  					E4E_HAL_SerialDevice_Debug, &serialConfig))
+	  	{
+	  		return 0;
+	  	}
+	  	*/
+	  while (i < 20)
+	  {
+		  //if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc,UART1_rxBuffer,1,50)){
+		  E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc,data, 1, 10);
+		  i++;
+	  }
+	  break;
 
 
-	  uint8_t empty[10];
+
+	  //uint8_t empty[10];
 	  /*
 	  while(1){
 		  if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc,&empty,1,50)){
@@ -158,6 +176,7 @@ int main(void)
 			  }
 	  }
 	  */
+	  /*
 	  if (HAL_UART_Receive_IT(&hlpuart1, empty, 10) != HAL_OK) {
 		  __NOP();
 	  }
@@ -165,6 +184,7 @@ int main(void)
 	  while (1) {
 		  __NOP();
 	  }
+	  */
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
@@ -181,6 +201,7 @@ int main(void)
   /* USER CODE END 3 */
 }
 
+
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -193,10 +214,12 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE2);
+
   /** Configure LSE Drive Capability
   */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -210,6 +233,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -259,4 +283,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
