@@ -28,12 +28,13 @@ E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
 int testWrite(void) {
 	// testing command device
 	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
-	return E4E_HAL_Serial_write(pDesc->uartHandle, "Test message!\n", 14, 0);
+	return E4E_HAL_Serial_write(pDesc, "Test message!\n", 14, 0);
 }
 
 int testRead(void) {
+	uint8_t testBuf[10];
 	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
-	return E4E_HAL_Serial_read(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE, 0);
+	return E4E_HAL_Serial_read(pDesc, testBuf, 10, 0);
 }
 
 /**
