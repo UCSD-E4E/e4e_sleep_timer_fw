@@ -70,6 +70,12 @@ typedef struct E4E_UARTHandle_To_SerialDesc_ {
 	E4E_HAL_SerialDesc_t *e4eSerialDesc;
 } E4E_UARTHandle_To_SerialDesc_t;
 
+/*
+ * Debug functions for testing purposes
+ */
+int testRead(void);
+int testWrite(void);
+
 /**
  * @brief Gets a E4E_Hal_SerialDesc_t given its corresponding UART_HandleTypeDef
  * @param huart The UART_HandleTypeDef as defined from the HAL

@@ -8,6 +8,10 @@
 #include <string.h>
 #include <E4E_HAL_Serial.h>
 #include <e4e_common.h>
+#include <Debug/debug_menu.h>
+
+
+
 
 E4E_UARTHandle_To_SerialDesc_t map_command, *pmap_command = &map_command;
 E4E_UARTHandle_To_SerialDesc_t map_debug, *pmap_debug = &map_debug;
@@ -19,6 +23,17 @@ E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
 		return pmap_debug->e4eSerialDesc;
 	}
 	return NULL;
+}
+
+int testWrite(void) {
+	// testing command device
+	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
+	return E4E_HAL_Serial_write(pDesc->uartHandle, "Test message!\n", 14, 0);
+}
+
+int testRead(void) {
+	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
+	return E4E_HAL_Serial_read(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE, 0);
 }
 
 /**

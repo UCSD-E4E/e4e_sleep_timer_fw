@@ -12,9 +12,18 @@
 #include <usart.h>
 #include <Debug/conio.h>
 #include <vers.h>
+#include <E4E_HAL_Serial.h>
+
+E4E_DebugMenu_t testMenu[] =
+{
+		{'a', E4E_DebugMenuType_Cmd, NULL, testWrite, "Test Serial Write"},
+		{'b', E4E_DebugMenuType_Cmd, NULL, testRead, "Test Serial Read"},
+		{'\0', E4E_DebugMenuType_Null, NULL, NULL, NULL}
+};
 
 E4E_DebugMenu_t debugMenu[] =
 {
+{ '1', E4E_DebugMenuType_Menu, testMenu, NULL, "Serial Debug Menu"},
 { '\0', E4E_DebugMenuType_Null, NULL, NULL, NULL } };
 
 void E4E_DebugApp(void)
