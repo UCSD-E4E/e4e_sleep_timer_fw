@@ -28,13 +28,20 @@ E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
 int testWrite(void) {
 	// testing command device
 	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
-	return E4E_HAL_Serial_write(pDesc, "Test message!\n", 14, 0);
+	return E4E_HAL_Serial_write(pDesc, "Test message!\n\r", 14, 0);
 }
 
 int testRead(void) {
-	uint8_t testBuf[10];
+	uint8_t testBuf[15];
 	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
-	return E4E_HAL_Serial_read(pDesc, testBuf, 10, 0);
+	if (E4E_OK != E4E_HAL_Serial_read(pDesc, testBuf, 15, 0)) {
+		E4E_Println("Unable to retrieve character!");
+		return E4E_ERROR;
+	}
+	else {
+		E4E_Println(testBuf);
+		return E4E_OK;
+	}
 }
 
 /**
@@ -67,7 +74,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	pDesc->readPtr = pDesc->tempRxBuf;
 	pDesc->writePtr = pDesc->tempRxBuf;
 	// if transmission uses interrupt or DMA mode, start collecting data right away
-	return (HAL_OK == HAL_UART_Receive_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
+	return (HAL_OK == HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
 }
 
 int E4E_HAL_Serial_deinit(E4E_HAL_SerialDesc_t *pDesc) {
@@ -105,43 +112,6 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 	memset(pDesc->rbmem, 0, RING_BUF_SIZE);
 
 	return E4E_OK;
-}
-
-/*
- * Grab the last item(s) of the rx buffer and move them into the ring buffer, then start
- * receiving again
- */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	// how much to write to ring buffer? depends on how much data has been written in so far
-	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
-	if (serialDesc == NULL) {
-		// should theoretically ever get here
-		return;
-	}
-	serialDesc->writePtr = serialDesc->tempRxBuf + RX_BUF_SIZE;
-
-	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->readPtr, serialDesc->writePtr - serialDesc->readPtr);
-
-	// reset both pointers to the beginning
-	serialDesc->readPtr = serialDesc->tempRxBuf;
-	serialDesc->writePtr = serialDesc->tempRxBuf;
-	// is this call necessary? or does DMA operate continuously on circular mode?
-	HAL_UART_Receive_DMA(huart, huart->pRxBuffPtr, huart->RxXferSize);
-}
-
-void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart) {
-	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
-	if (serialDesc == NULL) {
-		// should theoretically never get here
-		return;
-	}
-	// half complete, update writePtr to halfway point
-	serialDesc->writePtr = serialDesc->tempRxBuf + (RX_BUF_SIZE >> 1);
-
-	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->readPtr, serialDesc->writePtr - serialDesc->readPtr);
-
-	// update readPtr to writePtr position
-	serialDesc->readPtr = serialDesc->writePtr;
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
