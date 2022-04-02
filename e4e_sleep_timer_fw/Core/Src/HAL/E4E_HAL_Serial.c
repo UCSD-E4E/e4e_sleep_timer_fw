@@ -10,6 +10,7 @@
 #include <e4e_common.h>
 #include <Debug/debug_menu.h>
 
+__IO uint32_t uwNbReceivedChars;
 
 
 
@@ -34,7 +35,7 @@ int testWrite(void) {
 int testRead(void) {
 	uint8_t testBuf[15];
 	E4E_HAL_SerialDesc_t *pDesc = get_desc_from_handle(&hlpuart1);
-	if (E4E_OK != E4E_HAL_Serial_read(pDesc, testBuf, 15, 0)) {
+	if (E4E_OK != E4E_HAL_Serial_read(pDesc, testBuf, 3, 0)) {
 		E4E_Println("Unable to retrieve character!");
 		return E4E_ERROR;
 	}
@@ -71,8 +72,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	default: return E4E_ERROR;
 	};
 
-	pDesc->readPtr = pDesc->tempRxBuf;
-	pDesc->writePtr = pDesc->tempRxBuf;
+	pDesc->readPtr = 0;
 	// if transmission uses interrupt or DMA mode, start collecting data right away
 	return (HAL_OK == HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
 }
@@ -116,16 +116,41 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
-	if (serialDesc == NULL) {
-		// should theoretically never get here
-		return;
-	}
-	// idle, increment writePtr by however many bytes have been written
-	//TODO: verify that size is the correct number of bytes to be writing to the ring buffer
-	serialDesc->writePtr = serialDesc->writePtr + size;
-	ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->readPtr, serialDesc->writePtr - serialDesc->readPtr);
 
-	// update readPtr to writePtr position
-	serialDesc->readPtr = serialDesc->writePtr;
+	if (serialDesc == NULL) {
+			// should theoretically never get here
+			return;
+	}
+	/* Check if number of received data in recpetion buffer has changed */
+	if (size != serialDesc->readPtr){
+
+	 /* Check if position of index in reception buffer has simply be increased
+	       of if end of buffer has been reached */
+	    if (size > serialDesc->readPtr)
+	    {
+	      /* Current position is higher than previous one */
+	      uwNbReceivedChars = size - serialDesc->readPtr;
+	      /* Copy received data in "User" buffer for evacuation */
+	      ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf + serialDesc->readPtr, uwNbReceivedChars);
+	    }
+	    else
+	    {
+	      /* Current position is lower than previous one : end of buffer has been reached */
+	      /* First copy data from current position till end of buffer */
+	      uwNbReceivedChars = RX_BUF_SIZE - serialDesc->readPtr;
+	      /* Copy received data in "User" buffer for evacuation */
+
+	      ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf + serialDesc->readPtr, uwNbReceivedChars);
+
+	      /* Check and continue with beginning of buffer */
+	      if (size > 0)
+	      {
+	    	ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf, size);
+	        uwNbReceivedChars += size;
+	      }
+	    }
+
+	}
+	serialDesc->readPtr = size;
 }
 

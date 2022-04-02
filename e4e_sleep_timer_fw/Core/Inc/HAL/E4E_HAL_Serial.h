@@ -14,8 +14,7 @@
 #include <E4E_Ring_Buffer.h>
 
 #define RING_BUF_SIZE 128
-#define RX_BUF_SIZE 128
-
+#define RX_BUF_SIZE 4
 
 /**
  * Serial Configuration Structure
@@ -48,9 +47,7 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 */
 	uint8_t tempRxBuf[RX_BUF_SIZE];
 
-	uint8_t *readPtr;
-	uint8_t *writePtr;
-
+	uint16_t readPtr;
 	//function pointer to
 } E4E_HAL_SerialDesc_t;
 
