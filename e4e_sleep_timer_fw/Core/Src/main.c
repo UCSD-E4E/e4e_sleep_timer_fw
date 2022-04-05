@@ -100,13 +100,13 @@ int main(void)
   int testAlarmCallback(int64_t alarmTime, void* pContext);
 
   int64_t currTime = 0;
-  int64_t startTime = 1645573800232; 		//Arbitrary Value
-  int64_t alarmTime = 1645573810000;
+  int64_t startTime = 1649194687000; 		//Arbitrary Value
+  int64_t alarmTime = 1649194697000;
   E4E_HAL_RTCAlarmCallback rtcAlarmCallback;
   E4E_HAL_RTCDesc_t pDesc;
   E4E_HAL_RTCConfig_t pConfig;
 
-  E4E_HAL_RTC_init(&pDesc, &pConfig);
+  E4E_HAL_RTC_init(&pDesc, NULL);
   E4E_HAL_RTC_clearAlarm(&pDesc);
   E4E_HAL_RTC_setTime(&pDesc, startTime);
 

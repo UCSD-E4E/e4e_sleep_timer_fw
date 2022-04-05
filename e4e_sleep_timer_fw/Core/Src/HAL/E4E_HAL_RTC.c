@@ -17,17 +17,28 @@
 void (*alarmCallbackFunction)();
 void (*alarmCallbackFunctionContext)();
 int64_t alarmTime;
-
+E4E_HAL_RTCConfig_t g_config;
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
-	//TODO: Finish Implementation
 	pDesc->pHalDesc=&hrtc;
 
-	//Attributes: secondFraction, alarm Mask(s), Daylight Savings,
+
+	if(pConfig == NULL){
+		g_config.alarmMask = RTC_ALARMMASK_DATEWEEKDAY;
+		g_config.alarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
+		g_config.daylightSavings = RTC_DAYLIGHTSAVING_NONE;
+		g_config.secondFraction = 255;
+		g_config.RTCBackupVal = 0xBEBB;
+
+	}else{
+		g_config = *pConfig;
+	}
 
 	return E4E_OK;
 }
+
+
 int E4E_HAL_RTC_deinit(E4E_HAL_RTCDesc_t *pDesc)
 {
 	if(HAL_RTC_DeInit(&hrtc) != HAL_OK){
@@ -92,8 +103,8 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	sTime.Minutes = (uint8_t)time.tm_min;
 	sTime.Seconds = (uint8_t)time.tm_sec;
 
-	sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-	sTime.SecondFraction = 255;
+	sTime.DayLightSaving = g_config.daylightSavings;
+	sTime.SecondFraction = g_config.secondFraction;
 
 	//TODO: Verify Sub-Seconds works as expected
 	int sec_Fraction = (datetime % MS_TO_SEC);
@@ -112,6 +123,14 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 		return E4E_ERROR;
 	}
 
+	if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != g_config.RTCBackupVal)
+	{
+		// Write Back Up Register 1 Data
+		HAL_PWR_EnableBkUpAccess();
+		HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, g_config.RTCBackupVal);
+		HAL_PWR_DisableBkUpAccess();
+	}
+
 	return E4E_OK;
 }
 
@@ -124,6 +143,7 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	time_t alarmtime_seconds = (time_t)(alarm/MS_TO_SEC);
 	struct tm time = *gmtime(&alarmtime_seconds);
 
+	sTime.SecondFraction = g_config.secondFraction;
 	sTime.Hours = time.tm_hour;
 	sTime.Minutes = time.tm_min;
 	sTime.Seconds = time.tm_sec;
@@ -135,8 +155,8 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	sAlarm.AlarmTime = sTime;
 	sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
 	sAlarm.AlarmDateWeekDay = time.tm_mday;
-	sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
-	sAlarm.AlarmMask = RTC_ALARMMASK_DATEWEEKDAY;
+	sAlarm.AlarmSubSecondMask = g_config.alarmSubSecondMask;
+	sAlarm.AlarmMask = g_config.alarmMask;
 
 	if(HAL_RTC_SetAlarm_IT(pDesc->pHalDesc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK){
 		return E4E_ERROR;
@@ -183,6 +203,10 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
  */
 int E4E_HAL_RTC_initializationCheck(void)
 {
-	return 0;
+	if(HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) == g_config.RTCBackupVal){
+		return E4E_OK;
+	}
+
+	return E4E_ERROR;
 }
 

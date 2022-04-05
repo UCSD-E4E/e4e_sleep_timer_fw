@@ -24,7 +24,11 @@ typedef struct E4E_HAL_RTCDesc_
  */
 typedef struct E4E_HAL_RTCConfig_
 {
-	int dummy;
+	uint32_t secondFraction;
+	uint32_t daylightSavings;
+	uint32_t alarmMask;
+	uint32_t alarmSubSecondMask;
+	uint32_t RTCBackupVal;
 } E4E_HAL_RTCConfig_t;
 
 /**
