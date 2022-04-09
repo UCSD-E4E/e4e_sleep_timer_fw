@@ -72,7 +72,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	E4E_ST_AppConfig_t appConfig;
+  E4E_ST_AppConfig_t appConfig;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -149,24 +149,14 @@ int main(void)
 	  		return 0;
 	  	}
 	  	*/
-	  while (i < 20)
-	  {
-		  //if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc,UART1_rxBuffer,1,50)){
-		  E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc,data, 1, 10);
-		  i++;
-	  }
-	  break;
 
 
-
-	  //uint8_t empty[10];
-	  /*
+	  uint8_t empty[10];
 	  while(1){
-		  if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc,&empty,1,50)){
-			  E4E_HAL_Serial_write(&pHalSystem->commandSerialDesc, &empty, 1, 50);
+		  if(HAL_OK == HAL_UART_Receive(&hlpuart1,empty,1,50)){
+			  __NOP();
 		  }
 	  }
-	  */
 	  /*
 	  uint32_t timeOut = 50;
 	  uint8_t empty[1];
@@ -200,7 +190,6 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
-
 
 /**
   * @brief System Clock Configuration

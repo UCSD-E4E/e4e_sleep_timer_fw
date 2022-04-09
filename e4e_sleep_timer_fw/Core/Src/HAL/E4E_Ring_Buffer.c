@@ -17,7 +17,7 @@ static struct ring_buffer _rb[RING_BUFFER_MAX];
 
 int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr) {
 	static int idx = 0;
-	int err = E4E_ERROR;
+	int status = E4E_ERROR;
 
 	if ((idx < RING_BUFFER_MAX) && (rbd != NULL) && (attr != NULL)) {
 		if ((attr->buffer != NULL) && (attr->s_elem > 0)) {
@@ -28,28 +28,28 @@ int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr) {
 				_rb[idx].n_elem = attr->n_elem;
 				_rb[idx].buf = attr->buffer;
 				*rbd = idx++;
-				err = E4E_OK;
+				status = E4E_OK;
 			}
 		}
 	}
-	return err;
+	return status;
 }
 
 int ring_buffer_put(RBuf_Desc_t rbd, const void *data) {
-	int err = E4E_OK;
+	int status = E4E_OK;
 
 	if ((rbd < RING_BUFFER_MAX) && !(ring_buffer_full(&_rb[rbd]))) {
 		const size_t offset = (_rb[rbd].head & (_rb[rbd].n_elem - 1)) * _rb[rbd].s_elem;
 		memcpy(&(_rb[rbd].buf[offset]), data, _rb[rbd].s_elem);
 		_rb[rbd].head++;
 	} else {
-		err = E4E_ERROR;
+		status = E4E_ERROR;
 	}
-	return err;
+	return status;
 }
 
 int ring_buffer_get(RBuf_Desc_t rbd, void *data) {
-	int err = E4E_OK;
+	int status = E4E_OK;
 	if(_rb[rbd].head == _rb[rbd].tail){
 		return E4E_ERROR;
 	}
@@ -58,18 +58,22 @@ int ring_buffer_get(RBuf_Desc_t rbd, void *data) {
 		memcpy(data, &(_rb[rbd].buf[offset]), _rb[rbd].s_elem);
 		_rb[rbd].tail++;
 	} else {
-		err = E4E_ERROR;
+		status = E4E_ERROR;
 	}
 
-	return err;
+	return status;
 }
 
 int ring_buffer_get_multiple(RBuf_Desc_t rbd, void *data, int count) {
+	// we only want to read characters if we have enough data
+	size_t temp = _rb[rbd].tail;
+	if (_rb[rbd].head - _rb[rbd].tail < count) {
+		return E4E_ERROR;
+	}
 	for (int i = 0; i < count; i++) {
 		if (E4E_ERROR == ring_buffer_get(rbd, data+i)) {
-			// flush data buffer
-			memset(data, 0, i);
-
+			// move the pointer back to initial value if there is an error reading
+			_rb[rbd].tail = temp;
 			// need to do anything with ring buffer tail pointer?
 			return E4E_ERROR;
 		}

@@ -13,7 +13,7 @@
 #include <usart.h>
 #include <E4E_Ring_Buffer.h>
 
-#define RING_BUF_SIZE 128
+#define RING_BUF_SIZE 8
 #define RX_BUF_SIZE 4
 
 /**
@@ -22,6 +22,12 @@
 typedef struct E4E_HAL_SerialConfig_ {
 	int dummy;
 } E4E_HAL_SerialConfig_t;
+
+typedef enum E4E_Serial_Read_Status {
+	E4E_Serial_Read_Waiting,
+	E4E_Serial_Read_Timeout,
+	E4E_Serial_Read_Done
+} E4E_Serial_Read_Status_e;
 
 /**
  * Serial Driver Descriptor
@@ -47,9 +53,14 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 */
 	uint8_t tempRxBuf[RX_BUF_SIZE];
 
-	uint16_t readPtr;
+	volatile uint32_t readPos;
+
+	volatile uint32_t uwNbReceivedChars;
+
+	volatile E4E_Serial_Read_Status_e readStatus;
 	//function pointer to
 } E4E_HAL_SerialDesc_t;
+
 
 
 /**

@@ -10,10 +10,6 @@
 #include <e4e_common.h>
 #include <Debug/debug_menu.h>
 
-__IO uint32_t uwNbReceivedChars;
-
-
-
 E4E_UARTHandle_To_SerialDesc_t map_command, *pmap_command = &map_command;
 E4E_UARTHandle_To_SerialDesc_t map_debug, *pmap_debug = &map_debug;
 
@@ -72,8 +68,10 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	default: return E4E_ERROR;
 	};
 
-	pDesc->readPtr = 0;
+	pDesc->readPos = 0;
+	pDesc->readStatus = E4E_Serial_Read_Done;
 	// if transmission uses interrupt or DMA mode, start collecting data right away
+	//return HAL_OK;
 	return (HAL_OK == HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
 }
 
@@ -93,7 +91,25 @@ int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 	if (pDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
 
-    return ring_buffer_get_multiple(pDesc->ringBufDesc, pBuffer, count);
+	// TODO: implement timeout for reads
+
+	if (E4E_ERROR == ring_buffer_get_multiple(pDesc->ringBufDesc, pBuffer, count)) {
+		// TODO: activate timer to call interrupt when 1 second has passed
+		/*
+		pDesc->readStatus = E4E_Serial_Read_Waiting;
+		while (!pDesc->readStatus == E4E_Serial_Read_Waiting) {
+			// do nothing here
+		}
+		if (pDesc->readStatus == E4E_Serial_Read_Timeout) {
+			return E4E_ERROR;
+		} else {
+			return E4E_OK;
+		}*/
+		return E4E_ERROR;
+
+	} else {
+		return E4E_OK;
+	}
 }
 
 int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
@@ -122,35 +138,36 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 			return;
 	}
 	/* Check if number of received data in recpetion buffer has changed */
-	if (size != serialDesc->readPtr){
+	if (size != serialDesc->readPos){
 
 	 /* Check if position of index in reception buffer has simply be increased
 	       of if end of buffer has been reached */
-	    if (size > serialDesc->readPtr)
+	    if (size > serialDesc->readPos)
 	    {
 	      /* Current position is higher than previous one */
-	      uwNbReceivedChars = size - serialDesc->readPtr;
+	      serialDesc->uwNbReceivedChars = size - serialDesc->readPos;
 	      /* Copy received data in "User" buffer for evacuation */
-	      ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf + serialDesc->readPtr, uwNbReceivedChars);
+	      ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf + serialDesc->readPos, serialDesc->uwNbReceivedChars);
 	    }
 	    else
 	    {
 	      /* Current position is lower than previous one : end of buffer has been reached */
 	      /* First copy data from current position till end of buffer */
-	      uwNbReceivedChars = RX_BUF_SIZE - serialDesc->readPtr;
+	      serialDesc->uwNbReceivedChars = RX_BUF_SIZE - serialDesc->readPos;
 	      /* Copy received data in "User" buffer for evacuation */
 
-	      ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf + serialDesc->readPtr, uwNbReceivedChars);
+	      ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf + serialDesc->readPos, serialDesc->uwNbReceivedChars);
 
 	      /* Check and continue with beginning of buffer */
 	      if (size > 0)
 	      {
 	    	ring_buffer_put_multiple(serialDesc->ringBufDesc,serialDesc->tempRxBuf, size);
-	        uwNbReceivedChars += size;
+	        serialDesc->uwNbReceivedChars += size;
 	      }
 	    }
 
 	}
-	serialDesc->readPtr = size;
+	serialDesc->readPos = size;
+	serialDesc->readStatus = E4E_Serial_Read_Done;
 }
 
