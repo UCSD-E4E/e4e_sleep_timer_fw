@@ -69,7 +69,8 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	};
 
 	pDesc->readPos = 0;
-	pDesc->readStatus = E4E_Serial_Read_Done;
+	pDesc->readStatus = E4E_Serial_Done;
+	pDesc->writeStatus = E4E_Serial_Done;
 	// if transmission uses interrupt or DMA mode, start collecting data right away
 	//return HAL_OK;
 	return (HAL_OK == HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
@@ -91,20 +92,22 @@ int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 	if (pDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
 
-	// TODO: implement timeout for reads
-
 	if (E4E_ERROR == ring_buffer_get_multiple(pDesc->ringBufDesc, pBuffer, count)) {
 		// TODO: activate timer to call interrupt when 1 second has passed
-		/*
-		pDesc->readStatus = E4E_Serial_Read_Waiting;
-		while (!pDesc->readStatus == E4E_Serial_Read_Waiting) {
-			// do nothing here
+		pDesc->readStatus = E4E_Serial_Waiting;
+		uint32_t abs_timeout = HAL_GetTick() + timeout;
+		while (HAL_GetTick() < abs_timeout) {
+
+			// check if bytes have been received
+			if(pDesc->readStatus == E4E_Serial_Done) {
+				if (E4E_ERROR == ring_buffer_get_multiple(pDesc->ringBufDesc, pBuffer, count)) {
+					pDesc->readStatus = E4E_Serial_Waiting;
+				} else {
+					return E4E_OK;
+				}
+			}
 		}
-		if (pDesc->readStatus == E4E_Serial_Read_Timeout) {
-			return E4E_ERROR;
-		} else {
-			return E4E_OK;
-		}*/
+		pDesc->readStatus = E4E_Serial_Done;
 		return E4E_ERROR;
 
 	} else {
@@ -117,8 +120,7 @@ int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
 	if (pDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
 
-	// TODO: verify if we need to make a separate ring buffer for TX
-	return (HAL_OK == HAL_UART_Transmit_IT(pDesc->uartHandle, pData, nBytes)) ? E4E_OK: E4E_ERROR;
+	return (HAL_OK == HAL_UART_Transmit(pDesc->uartHandle, pData, nBytes, timeout)) ? E4E_OK : E4E_ERROR;
 }
 
 int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
@@ -168,6 +170,6 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 
 	}
 	serialDesc->readPos = size;
-	serialDesc->readStatus = E4E_Serial_Read_Done;
+	serialDesc->readStatus = E4E_Serial_Done;
 }
 

@@ -23,11 +23,10 @@ typedef struct E4E_HAL_SerialConfig_ {
 	int dummy;
 } E4E_HAL_SerialConfig_t;
 
-typedef enum E4E_Serial_Read_Status {
-	E4E_Serial_Read_Waiting,
-	E4E_Serial_Read_Timeout,
-	E4E_Serial_Read_Done
-} E4E_Serial_Read_Status_e;
+typedef enum E4E_Serial_Status {
+	E4E_Serial_Waiting,
+	E4E_Serial_Done
+} E4E_Serial_Status_e;
 
 /**
  * Serial Driver Descriptor
@@ -57,8 +56,9 @@ typedef struct E4E_HAL_SerialDesc_ {
 
 	volatile uint32_t uwNbReceivedChars;
 
-	volatile E4E_Serial_Read_Status_e readStatus;
-	//function pointer to
+	volatile E4E_Serial_Status_e readStatus;
+
+	volatile E4E_Serial_Status_e writeStatus;
 } E4E_HAL_SerialDesc_t;
 
 
