@@ -13,7 +13,7 @@
 #include <usart.h>
 #include <E4E_Ring_Buffer.h>
 
-#define RING_BUF_SIZE 8
+#define RING_BUF_SIZE 128
 #define RX_BUF_SIZE 4
 
 /**
