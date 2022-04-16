@@ -28,7 +28,6 @@ int E4E_HAL_System_init(void)
 	{
 		return E4E_ERROR;
 	}
-	/*
 	if (E4E_ERROR == E4E_HAL_RTC_init(&pHalSystem->rtcDesc, &rtcConfig))
 	{
 		return E4E_ERROR;
@@ -39,6 +38,5 @@ int E4E_HAL_System_init(void)
 	{
 		return E4E_ERROR;
 	}
-	*/
 	return E4E_OK;
 }

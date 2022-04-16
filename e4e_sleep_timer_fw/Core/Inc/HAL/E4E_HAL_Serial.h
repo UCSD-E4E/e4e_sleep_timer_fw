@@ -54,7 +54,7 @@ typedef struct E4E_HAL_SerialDesc_ {
 
 	volatile uint32_t readPos;
 
-	volatile uint32_t uwNbReceivedChars;
+	volatile uint32_t numReceivedChars;
 
 	volatile E4E_Serial_Status_e readStatus;
 

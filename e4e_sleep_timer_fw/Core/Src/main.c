@@ -95,6 +95,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_LPTIM1_Init();
+
+  // MX_DMA_Init enables DMA clock and UART_init enables DMA channels, need to initialize DMA first
   MX_DMA_Init();
   MX_LPUART1_UART_Init();
   MX_USART1_UART_Init();
@@ -132,49 +134,6 @@ int main(void)
 		  E4E_ST_App_run(&app);
 	  }
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
-	  uint8_t data[] = "p";
-	  uint8_t i = 0;
-	  //uint8_t UART1_rxBuffer[12];
-	  /*
-	  if (E4E_ERROR
-	  			== E4E_HAL_Serial_init(&pHalSystem->commandSerialDesc,
-	  					E4E_HAL_SerialDevice_Command, &serialConfig))
-	  	{
-	  		return  0;
-	  	}
-	  	if (E4E_ERROR
-	  			== E4E_HAL_Serial_init(&pHalSystem->debugSerialDesc,
-	  					E4E_HAL_SerialDevice_Debug, &serialConfig))
-	  	{
-	  		return 0;
-	  	}
-	  	*/
-
-
-	  uint8_t empty[10];
-	  while(1){
-		  if(HAL_OK == HAL_UART_Receive(&hlpuart1,empty,1,50)){
-			  __NOP();
-		  }
-	  }
-	  /*
-	  uint32_t timeOut = 50;
-	  uint8_t empty[1];
-		  while(1){
-			  if(E4E_OK == E4E_HAL_Serial_read(&pHalSystem->debugSerialDesc,&empty,2,timeOut)){
-				  E4E_HAL_Serial_write(&pHalSystem->debugSerialDesc, "F", 2, timeOut);
-			  }
-	  }
-	  */
-	  /*
-	  if (HAL_UART_Receive_IT(&hlpuart1, empty, 10) != HAL_OK) {
-		  __NOP();
-	  }
-
-	  while (1) {
-		  __NOP();
-	  }
-	  */
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
