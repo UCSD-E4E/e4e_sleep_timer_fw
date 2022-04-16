@@ -78,6 +78,7 @@ int E4E_HAL_Serial_deinit(E4E_HAL_SerialDesc_t *pDesc) {
 	if (pDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
 	HAL_UART_MspDeInit(pDesc->uartHandle);
+	pDesc->uartHandle = NULL;
 	return E4E_OK;
 }
 
