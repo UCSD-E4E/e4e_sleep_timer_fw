@@ -91,6 +91,13 @@ int ring_buffer_put_multiple(RBuf_Desc_t rbd, const void *data, int count) {
 	return E4E_OK;
 }
 
+int ring_buffer_clear(RBuf_Desc_t rbd) {
+	_rb[rbd].head = 0;
+	_rb[rbd].tail = 0;
+	memset(_rb[rbd].buf, 0, _rb[rbd].n_elem * _rb[rbd].s_elem);
+	return E4E_OK;
+}
+
 
 static int ring_buffer_full(struct ring_buffer *rb) {
 	return ((rb->head - rb->tail) == rb->n_elem) ? 1 : 0;

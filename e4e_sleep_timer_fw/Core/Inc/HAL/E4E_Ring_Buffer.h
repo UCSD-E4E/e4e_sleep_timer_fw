@@ -77,4 +77,11 @@ int ring_buffer_get_multiple(RBuf_Desc_t rbd, void *data, int count);
  */
 int ring_buffer_put_multiple(RBuf_Desc_t rbd, const void *data, int count);
 
+/*
+ * Clear all items from the ring buffer
+ * Arguments:
+ * rbd - index of buffer in global array of ring buffers
+ */
+int ring_buffer_clear(RBuf_Desc_t rbd);
+
 #endif /* INC_HAL_E4E_RING_BUFFER_H_ */

@@ -125,9 +125,7 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 	if (pDesc == 0) return E4E_ERROR;
 	if (pDesc->uartHandle == 0) return E4E_ERROR;
 
-	memset(pDesc->rbmem, 0, RING_BUF_SIZE);
-
-	return E4E_OK;
+	return ring_buffer_clear(pDesc->ringBufDesc);
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
