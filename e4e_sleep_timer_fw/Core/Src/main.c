@@ -70,7 +70,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	E4E_ST_AppConfig_t appConfig;
+  E4E_ST_AppConfig_t appConfig;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -100,18 +100,23 @@ int main(void)
   int testAlarmCallback(int64_t alarmTime, void* pContext);
 
   int64_t currTime = 0;
-  int64_t startTime = 1649194687000; 		//Arbitrary Value
+  int64_t startTime = 1649194687000; 		//Values for Testing
   int64_t alarmTime = 1649194697000;
-  E4E_HAL_RTCAlarmCallback rtcAlarmCallback;
   E4E_HAL_RTCDesc_t pDesc;
   E4E_HAL_RTCConfig_t pConfig;
 
-  E4E_HAL_RTC_init(&pDesc, NULL);
-  E4E_HAL_RTC_clearAlarm(&pDesc);
-  E4E_HAL_RTC_setTime(&pDesc, startTime);
 
-  E4E_HAL_RTC_setAlarm(&pDesc, alarmTime);
-  E4E_HAL_RTC_registerAlarmCallback(&pDesc, &testAlarmCallback, NULL);
+  if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
+
+	  E4E_HAL_RTC_init(&pDesc, NULL);
+	  E4E_HAL_RTC_clearAlarm(&pDesc);
+	  E4E_HAL_RTC_setTime(&pDesc, startTime);
+
+	  E4E_HAL_RTC_setAlarm(&pDesc, alarmTime);
+	  E4E_HAL_RTC_registerAlarmCallback(&pDesc, &testAlarmCallback, NULL);
+
+  }
+
 
   if(E4E_ERROR == E4E_HAL_System_init())
   {
@@ -207,11 +212,15 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+//Sample AlarmCallback Function
 int testAlarmCallback(int64_t alarmTime, void* pContext)
 {
-	int buf[50];
+	uint8_t buf[50];
 	sprintf((char*)buf,"Alarm Callback\r\n");
 	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+
+
 
 	return E4E_OK;
 }
