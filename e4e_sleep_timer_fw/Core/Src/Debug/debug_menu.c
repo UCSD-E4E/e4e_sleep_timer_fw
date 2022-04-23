@@ -13,11 +13,15 @@
 #include <Debug/conio.h>
 #include <vers.h>
 #include <E4E_HAL_Serial.h>
+#include <E4E_HAL_System.h>
+
+static int E4E_DebugMenuCom1Echo(void);
 
 E4E_DebugMenu_t testMenu[] =
 {
 		{'a', E4E_DebugMenuType_Cmd, NULL, testWrite, "Test Serial Write"},
 		{'b', E4E_DebugMenuType_Cmd, NULL, testRead, "Test Serial Read"},
+		{'e', E4E_DebugMenuType_Cmd, NULL, E4E_DebugMenuCom1Echo, "UART1 Echo"},
 		{'\0', E4E_DebugMenuType_Null, NULL, NULL, NULL}
 };
 
@@ -83,4 +87,22 @@ int E4E_DebugMenuProcess(const E4E_DebugMenu_t *const pMenu)
 				input);
 	} while (1);
 
+}
+
+static int E4E_DebugMenuCom1Echo(void)
+{
+	const size_t BUFSIZE = 1;
+	uint8_t buffer[BUFSIZE];
+	E4E_HAL_SerialDesc_t* pSerial;
+
+	pSerial = &pHalSystem->debugSerialDesc;
+
+	while(1)
+	{
+		if(E4E_OK != E4E_HAL_Serial_read(pSerial, buffer, BUFSIZE, UINT32_MAX))
+		{
+			continue;
+		}
+		E4E_Printf("%c", buffer[0]);
+	}
 }
