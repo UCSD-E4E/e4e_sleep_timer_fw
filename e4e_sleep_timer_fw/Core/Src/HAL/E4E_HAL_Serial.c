@@ -49,9 +49,13 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		E4E_HAL_SerialDevice_e device, E4E_HAL_SerialConfig_t *pConfig) {
 	// initialize ring buffer
 	RBuf_Attr_t attr = {sizeof(pDesc->rbmem[0]), RING_BUF_SIZE, &(pDesc->rbmem)};
-	if (ring_buffer_init(&(pDesc->ringBufDesc), &attr) != E4E_OK) return E4E_ERROR;
+	if (E4E_OK != ring_buffer_init(&(pDesc->ringBufDesc), &attr)) {
+		return E4E_ERROR;
+	}
 
-	if (pDesc == 0) return E4E_ERROR;
+	if (NULL == pDesc) {
+		return E4E_ERROR;
+	}
 	switch(device) {
 	case E4E_HAL_SerialDevice_Command:
 		// initialize the port for command device
@@ -65,18 +69,26 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		pmap_debug->uartHandle = &huart1;
 		pmap_debug->e4eSerialDesc = pDesc;
 		break;
-	default: return E4E_ERROR;
+	default:
+		return E4E_ERROR;
 	};
 
 	pDesc->readPos = 0;
 	pDesc->readStatus = E4E_Serial_Done;
 	pDesc->writeStatus = E4E_Serial_Done;
-	return (HAL_OK == HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) ? E4E_OK : E4E_ERROR;
+	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) {
+		return E4E_ERROR;
+	}
+	return E4E_OK;
 }
 
 int E4E_HAL_Serial_deinit(E4E_HAL_SerialDesc_t *pDesc) {
-	if (pDesc == 0) return E4E_ERROR;
-	if (pDesc->uartHandle == 0) return E4E_ERROR;
+	if (NULL == pDesc)  {
+		return E4E_ERROR;
+	}
+	if (NULL == pDesc->uartHandle) {
+		return E4E_ERROR;
+	}
 	HAL_UART_MspDeInit(pDesc->uartHandle);
 	pDesc->uartHandle = NULL;
 	return E4E_OK;
@@ -88,11 +100,14 @@ int E4E_HAL_Serial_deinit(E4E_HAL_SerialDesc_t *pDesc) {
  */
 int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 		size_t count, uint32_t timeout) {
-	if (pDesc == 0) return E4E_ERROR;
-	if (pDesc->uartHandle == 0) return E4E_ERROR;
+	if (NULL == pDesc) {
+		return E4E_ERROR;
+	}
+	if (NULL == pDesc->uartHandle) {
+		return E4E_ERROR;
+	}
 
 	if (E4E_ERROR == ring_buffer_get_multiple(pDesc->ringBufDesc, pBuffer, count)) {
-		// TODO: activate timer to call interrupt when 1 second has passed
 		pDesc->readStatus = E4E_Serial_Waiting;
 		uint32_t abs_timeout = HAL_GetTick() + timeout;
 		while (HAL_GetTick() < abs_timeout) {
@@ -116,15 +131,26 @@ int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 
 int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
 		size_t nBytes, uint32_t timeout) {
-	if (pDesc == 0) return E4E_ERROR;
-	if (pDesc->uartHandle == 0) return E4E_ERROR;
+	if (NULL == pDesc) {
+		return E4E_ERROR;
+	}
+	if (NULL == pDesc->uartHandle)  {
+		return E4E_ERROR;
+	}
 
-	return (HAL_OK == HAL_UART_Transmit(pDesc->uartHandle, pData, nBytes, timeout)) ? E4E_OK : E4E_ERROR;
+	if (HAL_OK != HAL_UART_Transmit(pDesc->uartHandle, pData, nBytes, timeout)) {
+		return E4E_ERROR;
+	}
+	return E4E_OK;
 }
 
 int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
-	if (pDesc == 0) return E4E_ERROR;
-	if (pDesc->uartHandle == 0) return E4E_ERROR;
+	if (NULL == pDesc) {
+		return E4E_ERROR;
+	}
+	if (NULL == pDesc->uartHandle) {
+		return E4E_ERROR;
+	}
 
 	return ring_buffer_clear(pDesc->ringBufDesc);
 }
@@ -132,7 +158,7 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	E4E_HAL_SerialDesc_t *serialDesc = get_desc_from_handle(huart);
 
-	if (serialDesc == NULL) {
+	if (NULL == serialDesc) {
 		// should theoretically never get here
 		return;
 	}

@@ -72,7 +72,6 @@ typedef enum E4E_HAL_SerialDevice_ {
 	E4E_HAL_SerialDevice__NELEMS /**< Number of Serial Ports */
 } E4E_HAL_SerialDevice_e;
 
-// TODO: add a static structure that maps UART_HandleTypeDef to its corresponding E4E_HAL_SerialDesc
 typedef struct E4E_UARTHandle_To_SerialDesc_ {
 	UART_HandleTypeDef *uartHandle;
 	E4E_HAL_SerialDesc_t *e4eSerialDesc;
