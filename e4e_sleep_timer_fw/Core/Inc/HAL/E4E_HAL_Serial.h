@@ -15,6 +15,7 @@
 
 #define RING_BUF_SIZE 128
 #define RX_BUF_SIZE 4
+#define NUM_PORTS 2
 
 /**
  * Serial Configuration Structure
@@ -51,6 +52,8 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 * Intermediate buffer for interrupts
 	 */
 	uint8_t tempRxBuf[RX_BUF_SIZE];
+
+	uint8_t portNum;
 
 	volatile uint32_t readPos;
 

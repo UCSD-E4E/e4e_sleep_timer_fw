@@ -9,14 +9,14 @@
 #include <E4E_HAL_Serial.h>
 #include <e4e_common.h>
 
-E4E_UARTHandle_To_SerialDesc_t map_command, *pmap_command = &map_command;
-E4E_UARTHandle_To_SerialDesc_t map_debug, *pmap_debug = &map_debug;
+E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS];
 
 static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
+	//TODO: find a way to avoid hard-coding the indices of the serial ports
 	if (huart == &hlpuart1) {
-		return pmap_command->e4eSerialDesc;
+		return uart_handle_to_descriptor_table[0].e4eSerialDesc;
 	} else if (huart == &huart1) {
-		return pmap_debug->e4eSerialDesc;
+		return uart_handle_to_descriptor_table[1].e4eSerialDesc;
 	}
 	return NULL;
 }
@@ -27,27 +27,36 @@ static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
  */
 int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		E4E_HAL_SerialDevice_e device, E4E_HAL_SerialConfig_t *pConfig) {
+	static uint8_t portNum = 0;
+
 	// initialize ring buffer
-	RBuf_Attr_t attr = {sizeof(pDesc->rbmem[0]), RING_BUF_SIZE, &(pDesc->rbmem)};
-	if (E4E_OK != ring_buffer_init(&(pDesc->ringBufDesc), &attr)) {
+	RBuf_Attr_t rb_attr;
+	rb_attr->s_elem = sizeof(pDesc->rbmem[0]);
+	rb_attr->n_elem = RING_BUF_SIZE;
+	rb_attr->buffer = &(pDesc->rbmem);
+
+	if (E4E_OK != ring_buffer_init(&(pDesc->ringBufDesc), &rb_attr)) {
 		return E4E_ERROR;
 	}
 
 	if (NULL == pDesc) {
 		return E4E_ERROR;
 	}
+
+	pDesc->portNum = portNum;
+	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[portNum]);
 	switch(device) {
 	case E4E_HAL_SerialDevice_Command:
 		// initialize the port for command device
 		pDesc->uartHandle = &hlpuart1;
-		pmap_command->uartHandle = &hlpuart1;
-		pmap_command->e4eSerialDesc = pDesc;
+		tableEntry->uartHandle = &hlpuart1;
+		tableEntry->e4eSerialDesc = pDesc;
 		break;
 	case E4E_HAL_SerialDevice_Debug:
 		// initialize the debug port
 		pDesc->uartHandle = &huart1;
-		pmap_debug->uartHandle = &huart1;
-		pmap_debug->e4eSerialDesc = pDesc;
+		tableEntry->uartHandle = &huart1;
+		tableEntry->e4eSerialDesc = pDesc;
 		break;
 	default:
 		return E4E_ERROR;
