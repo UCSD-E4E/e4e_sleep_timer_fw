@@ -15,6 +15,8 @@
 #include <E4E_HAL_Serial.h>
 #include <E4E_HAL_System.h>
 
+static int testWrite(void);
+static int testRead(void);
 static int E4E_DebugMenuCom1Echo(void);
 
 E4E_DebugMenu_t testMenu[] =
@@ -104,5 +106,25 @@ static int E4E_DebugMenuCom1Echo(void)
 			continue;
 		}
 		E4E_Printf("%c", buffer[0]);
+	}
+}
+
+
+static int testWrite(void) {
+	// testing command device
+	E4E_HAL_SerialDesc_t *pDesc = &pHalSystem->commandSerialDesc;
+	return E4E_HAL_Serial_write(pDesc, "Test message!\n\r", 14, 1000);
+}
+
+static int testRead(void) {
+	uint8_t testBuf[15];
+	E4E_HAL_SerialDesc_t *pDesc = &pHalSystem->commandSerialDesc;
+	if (E4E_OK != E4E_HAL_Serial_read(pDesc, testBuf, 3, 1000)) {
+		E4E_Println("Unable to retrieve character!");
+		return E4E_ERROR;
+	}
+	else {
+		E4E_Println(testBuf);
+		return E4E_OK;
 	}
 }

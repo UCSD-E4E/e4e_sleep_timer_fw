@@ -31,5 +31,6 @@ typedef struct E4E_DebugMenu_
 
 void E4E_DebugApp(void);
 
+
 int E4E_DebugMenuProcess(const E4E_DebugMenu_t* const pMenu);
 #endif /* INC_DEBUG_DEBUG_MENU_H_ */
