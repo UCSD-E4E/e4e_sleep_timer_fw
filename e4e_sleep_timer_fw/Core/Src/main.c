@@ -22,7 +22,6 @@
 #include "usart.h"
 #include "rtc.h"
 #include "gpio.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <product.h>
@@ -97,24 +96,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-  int testAlarmCallback(int64_t alarmTime, void* pContext);
 
   int64_t currTime = 0;
-  int64_t startTime = 1649194687000; 		//Values for Testing
-  int64_t alarmTime = 1649194697000;
   E4E_HAL_RTCDesc_t pDesc;
-  E4E_HAL_RTCConfig_t pConfig;
-
 
   if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-
-	  E4E_HAL_RTC_init(&pDesc, NULL);
-	  E4E_HAL_RTC_clearAlarm(&pDesc);
-	  E4E_HAL_RTC_setTime(&pDesc, startTime);
-
-	  E4E_HAL_RTC_setAlarm(&pDesc, alarmTime);
-	  E4E_HAL_RTC_registerAlarmCallback(&pDesc, &testAlarmCallback, NULL);
-
+	  setTimeAndAlarm(&pDesc);
   }
 
 
@@ -212,18 +199,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-//Sample AlarmCallback Function
-int testAlarmCallback(int64_t alarmTime, void* pContext)
-{
-	uint8_t buf[50];
-	sprintf((char*)buf,"Alarm Callback\r\n");
-	HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
-
-
-
-	return E4E_OK;
-}
 
 
 

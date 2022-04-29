@@ -7,6 +7,7 @@
 
 #include <time.h>
 #include <E4E_HAL_RTC.h>
+#include <Debug/conio.h>
 #include <rtc.h>
 #include <e4e_common.h>
 #include <stdio.h>
@@ -17,8 +18,12 @@
 #define MS_TO_SEC 1000
 #define PRINT_BUFFER 50
 
-void (*alarmCallbackFunction)();
-void (*alarmCallbackFunctionContext)();
+const uint32_t RTC_BACKUP_VAL = 0xBEBB;
+const uint32_t SECOND_FRACTION = 255;
+
+E4E_HAL_RTCAlarmCallback alarmCallbackFunction = NULL;
+void* alarmCallbackFunctionContext = NULL;
+
 int64_t alarmTime;
 E4E_HAL_RTCConfig_t g_config;
 
@@ -31,8 +36,8 @@ int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 		g_config.alarmMask = RTC_ALARMMASK_DATEWEEKDAY;
 		g_config.alarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
 		g_config.daylightSavings = RTC_DAYLIGHTSAVING_NONE;
-		g_config.secondFraction = 255;
-		g_config.RTCBackupVal = 0xBEBB;
+		g_config.secondFraction = SECOND_FRACTION;
+		g_config.RTCBackupVal = RTC_BACKUP_VAL;
 
 	}else{
 		g_config = *pConfig;
@@ -55,6 +60,7 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	RTC_TimeTypeDef sTime = {0};
 	RTC_DateTypeDef sDate = {0};
 	struct tm time;
+	int sec_Fraction;
 
 
 	if(HAL_RTC_GetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN) != HAL_OK){
@@ -62,12 +68,12 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	}
 
 	if(HAL_RTC_GetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN) != HAL_OK){
-			return E4E_ERROR;
+		return E4E_ERROR;
 	}
 
 	//Date/Time Conversion
-	time.tm_year = (uint8_t)(sDate.Year + 2000 - 1900);
-	time.tm_mon = (uint8_t)(sDate.Month - 1);
+	time.tm_year = (uint8_t)(sDate.Year + 2000 - 1900);			//Convert from years since 1900 to years from 2000
+	time.tm_mon = (uint8_t)(sDate.Month - 1);					//January = Month 0
 	time.tm_mday = (uint8_t)sDate.Date;
 	time.tm_wday = (uint8_t)sDate.WeekDay;
 
@@ -75,15 +81,15 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	time.tm_min = (uint8_t)sTime.Minutes;
 	time.tm_sec = (uint8_t)sTime.Seconds;
 
-	int sec_Fraction = (int)(((float)(sTime.SecondFraction - sTime.SubSeconds))/((float)sTime.SecondFraction+1)*MS_TO_SEC);
+	sec_Fraction = (int)((((double)sTime.SecondFraction - sTime.SubSeconds))/((double)sTime.SecondFraction+1)*MS_TO_SEC);
 
 	*pDatetime = mktime(&time)*MS_TO_SEC + sec_Fraction;
 
 	//Debug Printing
 	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-		uint8_t buf[PRINT_BUFFER];
-		sprintf((char*)buf,"STM Time -  %d/%d/%d   %d:%d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction);
-		HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+		char* debugOutput = "STM Time -  %d/%d/%d   %d:%d:%d:%d\r\n";
+		E4E_Printf(debugOutput,sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction);
+
 	}
 
 	return E4E_OK;
@@ -95,13 +101,15 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 
 	RTC_TimeTypeDef sTime;
 	RTC_DateTypeDef sDate;
+	struct tm time;
+	int sec_Fraction;
 
 	//Date/Time Conversion
 	time_t datetime_seconds = (time_t)(datetime/MS_TO_SEC);
-	struct tm time = *gmtime(&datetime_seconds);
+	time = *gmtime(&datetime_seconds);
 
-	sDate.Year = (uint8_t)(time.tm_year + 1900 - 2000);
-	sDate.Month = (uint8_t)(time.tm_mon + 1);
+	sDate.Year = (uint8_t)(time.tm_year + 1900 - 2000);		//Convert from years since 1900 to years from 2000
+	sDate.Month = (uint8_t)(time.tm_mon + 1);				//January = Month 0
 	sDate.Date = (uint8_t)time.tm_mday;
 	sDate.WeekDay = (uint8_t)time.tm_wday;
 
@@ -112,15 +120,15 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	sTime.DayLightSaving = g_config.daylightSavings;
 	sTime.SecondFraction = g_config.secondFraction;
 
-	int sec_Fraction = (datetime % MS_TO_SEC);
+	sec_Fraction = (datetime % MS_TO_SEC);
 
-	sTime.SubSeconds = sTime.SecondFraction - (float)sec_Fraction*(sTime.SecondFraction +1)/MS_TO_SEC;
+	sTime.SubSeconds = sTime.SecondFraction - sec_Fraction*((double)sTime.SecondFraction +1)/MS_TO_SEC;
 
 	//Debug Printing
 	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-		uint8_t buf[PRINT_BUFFER];
-		sprintf((char*)buf,"Start Date: %d/%d/%d Time: %d:%d:%d:%d\r\n", sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds, sec_Fraction);
-		HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+		char* debugOutput = "Start Date: %d/%d/%d Time: %d:%d:%d:%d\r\n";
+
+		E4E_Printf(debugOutput,sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds, sec_Fraction);
 	}
 
 	if(HAL_RTC_SetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN) != HAL_OK){
@@ -147,18 +155,20 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	RTC_TimeTypeDef sTime;
 	RTC_AlarmTypeDef sAlarm;
 	alarmTime = alarm;
+	struct tm time;
+	int sec_Fraction;
 
 	//Date/Time Conversion
 	time_t alarmtime_seconds = (time_t)(alarm/MS_TO_SEC);
-	struct tm time = *gmtime(&alarmtime_seconds);
+	time = *gmtime(&alarmtime_seconds);
 
 	sTime.SecondFraction = g_config.secondFraction;
 	sTime.Hours = time.tm_hour;
 	sTime.Minutes = time.tm_min;
 	sTime.Seconds = time.tm_sec;
 
-	int sec_Fraction = (alarm % MS_TO_SEC);
-	sTime.SubSeconds = sTime.SecondFraction - (float)sec_Fraction*(sTime.SecondFraction +1)/MS_TO_SEC;
+	sec_Fraction = (alarm % MS_TO_SEC);
+	sTime.SubSeconds = sTime.SecondFraction - ((float)sec_Fraction)*(sTime.SecondFraction + 1)/MS_TO_SEC;
 
 	//Alarm Settings
 	sAlarm.Alarm = RTC_ALARM_A;
@@ -199,11 +209,14 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 
 	//Debug Printing
 	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-		uint8_t buf[PRINT_BUFFER];
-		sprintf((char*)buf,"Alarm Triggered\r\n");
-		HAL_UART_Transmit(&huart2, buf, strlen((char*)buf),HAL_MAX_DELAY);
+		char* debugOutput = "Alarm Triggered\r\n";
+		E4E_Printf(debugOutput);
 	}
-	(*alarmCallbackFunction)(&alarmTime, alarmCallbackFunctionContext);
+
+	if(alarmCallbackFunction != NULL){
+		alarmCallbackFunction(alarmTime, alarmCallbackFunctionContext);
+	}
+
 }
 
 
