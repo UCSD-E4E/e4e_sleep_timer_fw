@@ -66,7 +66,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	pDesc->readPos = 0;
 	pDesc->readStatus = E4E_Serial_Done;
 	pDesc->writeStatus = E4E_Serial_Done;
-	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->tempRxBuf, RX_BUF_SIZE)) {
+	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->rbmem, RING_BUF_SIZE)) {
 		return E4E_ERROR;
 	}
 	return E4E_OK;

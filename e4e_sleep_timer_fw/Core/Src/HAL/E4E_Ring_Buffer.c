@@ -40,7 +40,7 @@ int ring_buffer_put(RBuf_Desc_t rbd, const void *data) {
 
 	if ((rbd < RING_BUFFER_MAX) && !(ring_buffer_full(&_rb[rbd]))) {
 		const size_t offset = (_rb[rbd].head & (_rb[rbd].n_elem - 1)) * _rb[rbd].s_elem;
-		memcpy(&(_rb[rbd].buf[offset]), data, _rb[rbd].s_elem);
+		//memcpy(&(_rb[rbd].buf[offset]), data, _rb[rbd].s_elem);
 		_rb[rbd].head++;
 	} else {
 		status = E4E_ERROR;
