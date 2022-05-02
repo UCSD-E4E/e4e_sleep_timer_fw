@@ -31,9 +31,9 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 
 	// initialize ring buffer
 	RBuf_Attr_t rb_attr;
-	rb_attr->s_elem = sizeof(pDesc->rbmem[0]);
-	rb_attr->n_elem = RING_BUF_SIZE;
-	rb_attr->buffer = &(pDesc->rbmem);
+	rb_attr.s_elem = sizeof(pDesc->rbmem[0]);
+	rb_attr.n_elem = RING_BUF_SIZE;
+	rb_attr.buffer = &(pDesc->rbmem);
 
 	if (E4E_OK != ring_buffer_init(&(pDesc->ringBufDesc), &rb_attr)) {
 		return E4E_ERROR;
@@ -45,6 +45,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 
 	pDesc->portNum = portNum;
 	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[portNum]);
+	portNum++;
 	switch(device) {
 	case E4E_HAL_SerialDevice_Command:
 		// initialize the port for command device
