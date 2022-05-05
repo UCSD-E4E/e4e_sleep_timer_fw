@@ -14,7 +14,6 @@
 #include <E4E_Ring_Buffer.h>
 
 #define RING_BUF_SIZE 128
-#define RX_BUF_SIZE 4
 #define NUM_PORTS 2
 
 /**
@@ -47,11 +46,6 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 * Ring buffer memory
 	 */
 	uint8_t rbmem[RING_BUF_SIZE];
-
-	/**
-	 * Intermediate buffer for interrupts
-	 */
-	uint8_t tempRxBuf[RX_BUF_SIZE];
 
 	uint8_t portNum;
 

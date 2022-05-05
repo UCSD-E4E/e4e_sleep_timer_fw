@@ -49,7 +49,7 @@ int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr);
  * rbd - index of buffer in global array of ring buffers
  * data - pointer to data to add to ring buffer
  */
-int ring_buffer_put(RBuf_Desc_t rbd, const void *data);
+int ring_buffer_put(RBuf_Desc_t rbd);
 
 /*
  * Get a single element from the ring buffer
@@ -75,7 +75,7 @@ int ring_buffer_get_multiple(RBuf_Desc_t rbd, void *data, int count);
  * data - pointer to location to pull data from
  * count - number of elements to add to ring buffer
  */
-int ring_buffer_put_multiple(RBuf_Desc_t rbd, const void *data, int count);
+int ring_buffer_put_multiple(RBuf_Desc_t rbd, int count);
 
 /*
  * Clear all items from the ring buffer
