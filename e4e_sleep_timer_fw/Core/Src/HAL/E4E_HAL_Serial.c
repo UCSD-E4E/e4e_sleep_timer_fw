@@ -9,7 +9,7 @@
 #include <E4E_HAL_Serial.h>
 #include <e4e_common.h>
 
-E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS];
+static E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS];
 
 static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
 	//TODO: find a way to avoid hard-coding the indices of the serial ports
@@ -97,11 +97,11 @@ int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 		return E4E_ERROR;
 	}
 
-	uint32_t abs_timeout = HAL_GetTick() + timeout;
-	while (HAL_GetTick() < abs_timeout) {
+	uint32_t start_time = HAL_GetTick();
+	while (HAL_GetTick() - start_time < timeout) {
 		// check if bytes have been received
-		if(pDesc->readStatus == E4E_Serial_Done) {
-			if (E4E_ERROR == ring_buffer_get_multiple(pDesc->ringBufDesc, pBuffer, count)) {
+		if(E4E_Serial_Done == pDesc->readStatus) {
+			if (E4E_ERROR == ring_buffer_get(pDesc->ringBufDesc, pBuffer, count)) {
 				pDesc->readStatus = E4E_Serial_Waiting;
 			} else {
 				return E4E_OK;
@@ -155,7 +155,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	      /* Current position is higher than previous one */
 	      serialDesc->numReceivedChars = size - serialDesc->readPos;
 	      /* Copy received data in "User" buffer for evacuation */
-	      ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->numReceivedChars);
+	      ring_buffer_put(serialDesc->ringBufDesc, serialDesc->numReceivedChars);
 	    }
 	    else
 	    {
@@ -164,12 +164,12 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	      serialDesc->numReceivedChars = RING_BUF_SIZE - serialDesc->readPos;
 	      /* Copy received data in "User" buffer for evacuation */
 
-	      ring_buffer_put_multiple(serialDesc->ringBufDesc, serialDesc->numReceivedChars);
+	      ring_buffer_put(serialDesc->ringBufDesc, serialDesc->numReceivedChars);
 
 	      /* Check and continue with beginning of buffer */
 	      if (size > 0)
 	      {
-	    	ring_buffer_put_multiple(serialDesc->ringBufDesc, size);
+	    	ring_buffer_put(serialDesc->ringBufDesc, size);
 	        serialDesc->numReceivedChars += size;
 	      }
 	    }
