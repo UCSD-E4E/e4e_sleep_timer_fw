@@ -35,12 +35,11 @@ int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr) {
 	return status;
 }
 
-int ring_buffer_put(RBuf_Desc_t rbd, const void *data) {
+int ring_buffer_put(RBuf_Desc_t rbd) {
 	int status = E4E_OK;
 
 	if ((rbd < RING_BUFFER_MAX) && !(ring_buffer_full(&_rb[rbd]))) {
 		const size_t offset = (_rb[rbd].head & (_rb[rbd].n_elem - 1)) * _rb[rbd].s_elem;
-		//memcpy(&(_rb[rbd].buf[offset]), data, _rb[rbd].s_elem);
 		_rb[rbd].head++;
 	} else {
 		status = E4E_ERROR;
@@ -81,9 +80,9 @@ int ring_buffer_get_multiple(RBuf_Desc_t rbd, void *data, int count) {
 	return E4E_OK;
 }
 
-int ring_buffer_put_multiple(RBuf_Desc_t rbd, const void *data, int count) {
+int ring_buffer_put_multiple(RBuf_Desc_t rbd, int count) {
 	for (int i = 0; i < count; i++) {
-		if (E4E_ERROR == ring_buffer_put(rbd, data+i)) {
+		if (E4E_ERROR == ring_buffer_put(rbd)) {
 			// need to do anything with ring buffer head pointer?
 			return E4E_ERROR;
 		}
