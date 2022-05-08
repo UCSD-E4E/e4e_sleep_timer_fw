@@ -31,7 +31,6 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 
 	// initialize ring buffer
 	RBuf_Attr_t rb_attr;
-	rb_attr.s_elem = sizeof(pDesc->rbmem[0]);
 	rb_attr.n_elem = RING_BUF_SIZE;
 	rb_attr.buffer = &(pDesc->rbmem);
 

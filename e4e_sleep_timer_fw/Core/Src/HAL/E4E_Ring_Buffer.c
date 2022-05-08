@@ -20,11 +20,10 @@ int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr) {
 	int status = E4E_ERROR;
 
 	if ((idx < RING_BUFFER_MAX) && (rbd != NULL) && (attr != NULL)) {
-		if ((attr->buffer != NULL) && (attr->s_elem > 0)) {
+		if (attr->buffer != NULL) {
 			if (((attr->n_elem - 1) & attr->n_elem) == 0) {
 				_rb[idx].head = 0;
 				_rb[idx].tail = 0;
-				_rb[idx].s_elem = attr->s_elem;
 				_rb[idx].n_elem = attr->n_elem;
 				_rb[idx].buf = attr->buffer;
 				*rbd = idx++;
@@ -41,8 +40,8 @@ int ring_buffer_get(RBuf_Desc_t rbd, void *data, int count) {
 		return E4E_ERROR;
 	}
 	if ((rbd < RING_BUFFER_MAX) && !(ring_buffer_empty(&_rb[rbd]))) {
-		const size_t offset = (_rb[rbd].tail & (_rb[rbd].n_elem - 1)) * _rb[rbd].s_elem;
-		memcpy(data, &(_rb[rbd].buf[offset]), count * _rb[rbd].s_elem);
+		const size_t offset = _rb[rbd].tail & (_rb[rbd].n_elem - 1);
+		memcpy(data, &(_rb[rbd].buf[offset]), count);
 		_rb[rbd].tail += count;;
 	} else {
 		 return E4E_ERROR;
@@ -65,7 +64,7 @@ int ring_buffer_put(RBuf_Desc_t rbd, int count) {
 int ring_buffer_clear(RBuf_Desc_t rbd) {
 	_rb[rbd].head = 0;
 	_rb[rbd].tail = 0;
-	memset(_rb[rbd].buf, 0, _rb[rbd].n_elem * _rb[rbd].s_elem);
+	memset(_rb[rbd].buf, 0, _rb[rbd].n_elem);
 	return E4E_OK;
 }
 

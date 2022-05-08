@@ -18,7 +18,6 @@
  * Note: n_elem should be restricted to a power of 2 for computational efficiency
  */
 typedef struct {
-	size_t s_elem;
 	size_t n_elem;
 	void  *buffer;
 } RBuf_Attr_t;
@@ -26,7 +25,6 @@ typedef struct {
 typedef unsigned int RBuf_Desc_t;
 
 struct ring_buffer {
-	size_t s_elem;
 	size_t n_elem;
 	uint8_t *buf;
 	volatile size_t head;
