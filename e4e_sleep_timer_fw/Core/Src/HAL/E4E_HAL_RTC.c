@@ -32,7 +32,7 @@ int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 	pDesc->pHalDesc=&hrtc;
 
 	//Default Config if no RTC config is passed in
-	if(pConfig == NULL){
+	if(NULL == pConfig){
 		g_config.alarmMask = RTC_ALARMMASK_DATEWEEKDAY;
 		g_config.alarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
 		g_config.daylightSavings = RTC_DAYLIGHTSAVING_NONE;
@@ -49,7 +49,7 @@ int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 
 int E4E_HAL_RTC_deinit(E4E_HAL_RTCDesc_t *pDesc)
 {
-	if(HAL_RTC_DeInit(&hrtc) != HAL_OK){
+	if(HAL_OK != HAL_RTC_DeInit(&hrtc)){
 		return E4E_ERROR;
 	}
 	return E4E_OK;
@@ -63,11 +63,11 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	int sec_Fraction;
 
 
-	if(HAL_RTC_GetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN) != HAL_OK){
+	if(HAL_OK != HAL_RTC_GetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
 	}
 
-	if(HAL_RTC_GetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN) != HAL_OK){
+	if(HAL_OK != HAL_RTC_GetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
 	}
 
@@ -81,9 +81,9 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	time.tm_min = (uint8_t)sTime.Minutes;
 	time.tm_sec = (uint8_t)sTime.Seconds;
 
-	sec_Fraction = (int)((((double)sTime.SecondFraction - sTime.SubSeconds))/((double)sTime.SecondFraction+1)*MS_TO_SEC);
+	sec_Fraction = (int)(((double)sTime.SecondFraction - sTime.SubSeconds) / ((double)sTime.SecondFraction + 1) * MS_TO_SEC);
 
-	*pDatetime = mktime(&time)*MS_TO_SEC + sec_Fraction;
+	*pDatetime = mktime(&time) * MS_TO_SEC + sec_Fraction;
 
 	//Debug Printing
 	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
@@ -122,7 +122,7 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 
 	sec_Fraction = (datetime % MS_TO_SEC);
 
-	sTime.SubSeconds = sTime.SecondFraction - sec_Fraction*((double)sTime.SecondFraction +1)/MS_TO_SEC;
+	sTime.SubSeconds = sTime.SecondFraction - sec_Fraction * ((double)sTime.SecondFraction + 1) / MS_TO_SEC;
 
 	//Debug Printing
 	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
@@ -131,21 +131,14 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 		E4E_Printf(debugOutput,sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds, sec_Fraction);
 	}
 
-	if(HAL_RTC_SetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN) != HAL_OK){
+	if(HAL_OK != HAL_RTC_SetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
 	}
 
-	if(HAL_RTC_SetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN) != HAL_OK){
+	if(HAL_OK != HAL_RTC_SetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
 	}
 
-	//Write data to backup Register to show that the time has been set
-	if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != g_config.RTCBackupVal)
-	{
-		HAL_PWR_EnableBkUpAccess();
-		HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, g_config.RTCBackupVal);
-		HAL_PWR_DisableBkUpAccess();
-	}
 
 	return E4E_OK;
 }
@@ -168,7 +161,7 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	sTime.Seconds = time.tm_sec;
 
 	sec_Fraction = (alarm % MS_TO_SEC);
-	sTime.SubSeconds = sTime.SecondFraction - ((float)sec_Fraction)*(sTime.SecondFraction + 1)/MS_TO_SEC;
+	sTime.SubSeconds = sTime.SecondFraction - ((float)sec_Fraction) * (sTime.SecondFraction + 1) / MS_TO_SEC;
 
 	//Alarm Settings
 	sAlarm.Alarm = RTC_ALARM_A;
@@ -178,7 +171,7 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	sAlarm.AlarmSubSecondMask = g_config.alarmSubSecondMask;
 	sAlarm.AlarmMask = g_config.alarmMask;
 
-	if(HAL_RTC_SetAlarm_IT(pDesc->pHalDesc, &sAlarm, RTC_FORMAT_BIN) != HAL_OK){
+	if(HAL_OK != HAL_RTC_SetAlarm_IT(pDesc->pHalDesc, &sAlarm, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
 	}
 	return E4E_OK;
@@ -187,7 +180,7 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 
 int E4E_HAL_RTC_clearAlarm(E4E_HAL_RTCDesc_t *pDesc)
 {
-	if(HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A) != HAL_OK){
+	if(HAL_OK != HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A)){
 		return E4E_ERROR;
 	}
 	return E4E_OK;
@@ -213,7 +206,7 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 		E4E_Printf(debugOutput);
 	}
 
-	if(alarmCallbackFunction != NULL){
+	if(NULL != alarmCallbackFunction){
 		alarmCallbackFunction(alarmTime, alarmCallbackFunctionContext);
 	}
 
@@ -235,6 +228,10 @@ int E4E_HAL_RTC_initializationCheck(void)
 		return E4E_OK;
 	}
 
+	//Write data to backup Register to show that the RTC has been initialized
+	HAL_PWR_EnableBkUpAccess();
+	HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, g_config.RTCBackupVal);
+	HAL_PWR_DisableBkUpAccess();
 	return E4E_ERROR;
 }
 

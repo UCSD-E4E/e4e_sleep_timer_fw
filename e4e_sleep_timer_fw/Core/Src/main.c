@@ -97,11 +97,11 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
+  E4E_HAL_System_init();
   int64_t currTime = 0;
-  E4E_HAL_RTCDesc_t pDesc;
 
   if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-	  setTimeAndAlarm(&pDesc);
+	  setTimeAndAlarm(&pHalSystem->rtcDesc);
   }
 
 
@@ -139,7 +139,7 @@ int main(void)
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
-	  E4E_HAL_RTC_getTime(&pDesc, &currTime);
+	  E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, &currTime);
 	  HAL_Delay(500);
 
 #elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC

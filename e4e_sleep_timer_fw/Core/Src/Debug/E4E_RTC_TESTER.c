@@ -10,6 +10,7 @@
 
 int testAlarmCallback(int64_t alarmTime, void* pContext)
 {
+	//Test Alarm Callback
 	char* buf = "Alarm Callback\r\n";
 	E4E_Printf(buf);
 
@@ -19,7 +20,7 @@ int testAlarmCallback(int64_t alarmTime, void* pContext)
 
 void setTimeAndAlarm(E4E_HAL_RTCDesc_t *pDesc){
 
-	  E4E_HAL_RTC_init(pDesc, NULL);
+	  //Test All RTC Functionality
 	  E4E_HAL_RTC_clearAlarm(pDesc);
 	  E4E_HAL_RTC_setTime(pDesc, testStartTime);
 
