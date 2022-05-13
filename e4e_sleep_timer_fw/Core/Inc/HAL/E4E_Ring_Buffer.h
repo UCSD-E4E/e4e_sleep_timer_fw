@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 
+/** Maximum number of ring buffer instances (should be one for each serial port) */
 #define RING_BUFFER_MAX 2
 
 /**
@@ -22,6 +23,9 @@ typedef struct {
 	void  *buffer;
 } RBuf_Attr_t;
 
+/**
+ * Ring buffer descriptor (an index in a global array)
+ */
 typedef unsigned int RBuf_Desc_t;
 
 /**

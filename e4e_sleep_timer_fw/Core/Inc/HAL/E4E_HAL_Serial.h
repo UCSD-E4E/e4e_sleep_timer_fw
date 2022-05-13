@@ -53,11 +53,10 @@ typedef struct E4E_HAL_SerialDesc_ {
 	 */
 	uint8_t rbmem[RING_BUF_SIZE];
 
-	uint8_t portNum;
-
-	volatile uint32_t readPos;
-
-	volatile uint32_t numReceivedChars;
+	/**
+	 * Head of the ring buffer (position of last available byte)
+ 	 */
+	volatile uint32_t headPos;
 
 	/**
 	 * Current status of serial read
@@ -84,14 +83,6 @@ typedef struct E4E_UARTHandle_To_SerialDesc_ {
 	UART_HandleTypeDef *uartHandle;
 	E4E_HAL_SerialDesc_t *e4eSerialDesc;
 } E4E_UARTHandle_To_SerialDesc_t;
-
-
-/**
- * @brief Gets a E4E_Hal_SerialDesc_t given its corresponding UART_HandleTypeDef
- * @param huart The UART_HandleTypeDef as defined from the HAL
- * @return The corresponding E4E_UARTHandle_To_SerialDesc_t as set in E4E_Hal_Serial_init
- */
-static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart);
 
 /**
  * @brief Initializes the Serial Driver
