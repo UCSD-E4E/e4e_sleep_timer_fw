@@ -17,7 +17,6 @@ static E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS]
  * @return The corresponding E4E_UARTHandle_To_SerialDesc_t as set in E4E_Hal_Serial_init
  */
 static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
-	//TODO: find a way to avoid hard-coding the indices of the serial ports
 	if (huart == &hlpuart1) {
 		return uart_handle_to_descriptor_table[0].e4eSerialDesc;
 	} else if (huart == &huart1) {
