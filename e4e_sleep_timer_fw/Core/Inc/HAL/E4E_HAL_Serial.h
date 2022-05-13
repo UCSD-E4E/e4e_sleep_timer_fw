@@ -13,7 +13,10 @@
 #include <usart.h>
 #include <E4E_Ring_Buffer.h>
 
+/** Size of a ring buffer */
 #define RING_BUF_SIZE 128
+
+/** Current number of serial ports active */
 #define NUM_PORTS 2
 
 /**
@@ -23,9 +26,12 @@ typedef struct E4E_HAL_SerialConfig_ {
 	int dummy;
 } E4E_HAL_SerialConfig_t;
 
+/**
+ * Serial line status
+ */
 typedef enum E4E_Serial_Status {
-	E4E_Serial_Waiting,
-	E4E_Serial_Done
+	E4E_Serial_Waiting,/**< Wait - driver is still waiting to receive bytes */
+	E4E_Serial_Done    /**< Done - driver is ready */
 } E4E_Serial_Status_e;
 
 /**
@@ -53,9 +59,11 @@ typedef struct E4E_HAL_SerialDesc_ {
 
 	volatile uint32_t numReceivedChars;
 
+	/**
+	 * Current status of serial read
+     */
 	volatile E4E_Serial_Status_e readStatus;
 
-	volatile E4E_Serial_Status_e writeStatus;
 } E4E_HAL_SerialDesc_t;
 
 
@@ -69,6 +77,9 @@ typedef enum E4E_HAL_SerialDevice_ {
 	E4E_HAL_SerialDevice__NELEMS /**< Number of Serial Ports */
 } E4E_HAL_SerialDevice_e;
 
+/**
+ * Maps lower level UART_HandleTypeDef to E4E_HAL_SerialDesc_t
+ */
 typedef struct E4E_UARTHandle_To_SerialDesc_ {
 	UART_HandleTypeDef *uartHandle;
 	E4E_HAL_SerialDesc_t *e4eSerialDesc;

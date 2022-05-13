@@ -64,7 +64,6 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 
 	pDesc->readPos = 0;
 	pDesc->readStatus = E4E_Serial_Done;
-	pDesc->writeStatus = E4E_Serial_Done;
 	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->rbmem, RING_BUF_SIZE)) {
 		return E4E_ERROR;
 	}
@@ -134,7 +133,10 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 		return E4E_ERROR;
 	}
 
-	return ring_buffer_clear(pDesc->ringBufDesc);
+	if (E4E_OK != ring_buffer_clear(pDesc->ringBufDesc)) {
+		return E4E_ERROR;
+	}
+	return E4E_OK;
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
@@ -153,16 +155,16 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	    {
 	      /* Current position is higher than previous one */
 	      serialDesc->numReceivedChars = size - serialDesc->readPos;
-	      /* Copy received data in "User" buffer for evacuation */
+	      /* Update head pointer of the ring buffer */
 	      ring_buffer_put(serialDesc->ringBufDesc, serialDesc->numReceivedChars);
 	    }
 	    else
 	    {
 	      /* Current position is lower than previous one : end of buffer has been reached */
-	      /* First copy data from current position till end of buffer */
+	      /* First update head pointer to end of buffer */
 	      serialDesc->numReceivedChars = RING_BUF_SIZE - serialDesc->readPos;
-	      /* Copy received data in "User" buffer for evacuation */
 
+	      /* Update head pointer of the ring buffer */
 	      ring_buffer_put(serialDesc->ringBufDesc, serialDesc->numReceivedChars);
 
 	      /* Check and continue with beginning of buffer */

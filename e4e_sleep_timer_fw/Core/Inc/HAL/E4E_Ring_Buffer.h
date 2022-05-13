@@ -14,8 +14,8 @@
 
 #define RING_BUFFER_MAX 2
 
-/*
- * Note: n_elem should be restricted to a power of 2 for computational efficiency
+/**
+ * Ring buffer configuration structure
  */
 typedef struct {
 	size_t n_elem;
@@ -24,6 +24,9 @@ typedef struct {
 
 typedef unsigned int RBuf_Desc_t;
 
+/**
+ *	Ring buffer struct
+ */
 struct ring_buffer {
 	size_t n_elem;
 	uint8_t *buf;
@@ -31,38 +34,35 @@ struct ring_buffer {
 	volatile size_t tail;
 };
 
-/*
- * Initialize a ring buffer
- * Arguments:
- * rbd - index of buffer in global array of ring buffers (output, modified by function)
- * attr - attributes of this ring buffer
- *
- * Returns: E4E_ERROR or E4E_OK
+/**
+ * @brief Initialize a ring buffer
+ * @param rbd Index of buffer in global array of ring buffers (output, modified by function)
+ * @param attr Attributes of this ring buffer
+ * @return E4E_OK if ring buffer successfully initialized, otherwise E4E_ERROR
  */
 int ring_buffer_init(RBuf_Desc_t *rbd, RBuf_Attr_t *attr);
 
-/*
- * Get elements from the ring buffer
- * Arguments:
- * rbd - index of buffer in global array of ring buffers
- * data - pointer to location to store the data to
- * count - number of elements to get from the ring buffer
+/**
+ * @brief Get elements from the ring buffer
+ * @param rbd Index of buffer in global array of ring buffers
+ * @param data Pointer to location to store the data to
+ * @param count Number of elements to get from the ring buffer
+ * @return E4E_OK if `count` bytes successfully retrieved from ring buffer and written into `data`, else E4E_ERROR
  */
 int ring_buffer_get(RBuf_Desc_t rbd, void *data, int count);
 
-/*
- * Put elements in the ring buffer
- * Arguments:
- * rbd - index of buffer in global array of ring buffers
- * data - pointer to location to pull data from
- * count - number of elements to add to ring buffer
+/**
+ * @brief Put elements in the ring buffer by incrementing the head pointer
+ * @param rbd Index of buffer in global array of ring buffers
+ * @param count Number of elements to add to ring buffer
+ * @return E4E_OK if `count` bytes added to ring buffer, else E4E_ERROR
  */
 int ring_buffer_put(RBuf_Desc_t rbd, int count);
 
-/*
- * Clear all items from the ring buffer
- * Arguments:
- * rbd - index of buffer in global array of ring buffers
+/**
+ * @brief Clear all items from the ring buffer
+ * @param rbd Index of buffer in global array of ring buffers
+ * @return E4E_OK if ring buffer successfully cleared, else E4E_ERROR
  */
 int ring_buffer_clear(RBuf_Desc_t rbd);
 
