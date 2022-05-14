@@ -28,7 +28,6 @@ typedef struct E4E_HAL_RTCConfig_
 	uint32_t daylightSavings;
 	uint32_t alarmMask;
 	uint32_t alarmSubSecondMask;
-	uint32_t RTCBackupVal;
 } E4E_HAL_RTCConfig_t;
 
 /**

@@ -18,14 +18,23 @@
 #define MS_TO_SEC 1000
 #define PRINT_BUFFER 50
 
-const uint32_t RTC_BACKUP_VAL = 0xBEBB;
-const uint32_t SECOND_FRACTION = 255;
+const uint32_t RTC_BACKUP_VAL = 0xAAFF;
 
 E4E_HAL_RTCAlarmCallback alarmCallbackFunction = NULL;
 void* alarmCallbackFunctionContext = NULL;
 
 int64_t alarmTime;
+int alarmTriggered = 0;
 E4E_HAL_RTCConfig_t g_config;
+
+
+#if E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
+    #define  DEBUG_MSG E4E_Printf
+#else
+    #define  DEBUG_MSG(...) {}
+#endif
+
+
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
@@ -33,11 +42,10 @@ int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 
 	//Default Config if no RTC config is passed in
 	if(NULL == pConfig){
-		g_config.alarmMask = RTC_ALARMMASK_DATEWEEKDAY;
-		g_config.alarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
-		g_config.daylightSavings = RTC_DAYLIGHTSAVING_NONE;
-		g_config.secondFraction = SECOND_FRACTION;
-		g_config.RTCBackupVal = RTC_BACKUP_VAL;
+		g_config.alarmMask = (uint32_t)(hrtc.Instance->ALRMAR & RTC_ALARMMASK_ALL);
+		g_config.alarmSubSecondMask = (uint32_t) (hrtc.Instance->ALRMASSR & RTC_ALRMASSR_MASKSS);
+		g_config.secondFraction = (uint32_t)(hrtc.Instance->PRER & RTC_PRER_PREDIV_S);
+		g_config.daylightSavings = (uint32_t)(hrtc.Instance->CR & RTC_CR_BKP);
 
 	}else{
 		g_config = *pConfig;
@@ -86,11 +94,8 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 	*pDatetime = mktime(&time) * MS_TO_SEC + sec_Fraction;
 
 	//Debug Printing
-	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-		char* debugOutput = "STM Time -  %d/%d/%d   %d:%d:%d:%d\r\n";
-		E4E_Printf(debugOutput,sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction);
-
-	}
+	DEBUG_MSG("STM Time -  %d/%d/%d   %d:%d:%d:%d Alarm Triggered: %d\r\n", sDate.Month, sDate.Date, sDate.Year,
+			sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction, alarmTriggered);
 
 	return E4E_OK;
 }
@@ -125,11 +130,8 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	sTime.SubSeconds = sTime.SecondFraction - sec_Fraction * ((double)sTime.SecondFraction + 1) / MS_TO_SEC;
 
 	//Debug Printing
-	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-		char* debugOutput = "Start Date: %d/%d/%d Time: %d:%d:%d:%d\r\n";
-
-		E4E_Printf(debugOutput,sDate.Month, sDate.Date, sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds, sec_Fraction);
-	}
+	DEBUG_MSG("Start Date: %d/%d/%d Time: %d:%d:%d:%d\r\n",sDate.Month, sDate.Date,
+			sDate.Year, sTime.Hours, sTime.Minutes, sTime.Seconds, sec_Fraction);
 
 	if(HAL_OK != HAL_RTC_SetTime(pDesc->pHalDesc, &sTime, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
@@ -138,7 +140,6 @@ int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime)
 	if(HAL_OK != HAL_RTC_SetDate(pDesc->pHalDesc, &sDate, RTC_FORMAT_BIN)){
 		return E4E_ERROR;
 	}
-
 
 	return E4E_OK;
 }
@@ -150,6 +151,8 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 	alarmTime = alarm;
 	struct tm time;
 	int sec_Fraction;
+
+	alarmTriggered = 0;
 
 	//Date/Time Conversion
 	time_t alarmtime_seconds = (time_t)(alarm/MS_TO_SEC);
@@ -199,13 +202,9 @@ int E4E_HAL_RTC_registerAlarmCallback(E4E_HAL_RTCDesc_t *pDesc,
 
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 {
+	alarmTriggered = 1;
 
-	//Debug Printing
-	if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-		char* debugOutput = "Alarm Triggered\r\n";
-		E4E_Printf(debugOutput);
-	}
-
+	//Alarm Callback
 	if(NULL != alarmCallbackFunction){
 		alarmCallbackFunction(alarmTime, alarmCallbackFunctionContext);
 	}
@@ -224,13 +223,13 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 int E4E_HAL_RTC_initializationCheck(void)
 {
 	//Check if RTC Backup Register has been set
-	if(HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) == g_config.RTCBackupVal){
+	if(RTC_BACKUP_VAL == HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1)){
 		return E4E_OK;
 	}
 
 	//Write data to backup Register to show that the RTC has been initialized
 	HAL_PWR_EnableBkUpAccess();
-	HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, g_config.RTCBackupVal);
+	HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, RTC_BACKUP_VAL);
 	HAL_PWR_DisableBkUpAccess();
 	return E4E_ERROR;
 }

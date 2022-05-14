@@ -8,12 +8,9 @@
   int64_t testAlarmTime = 1649194697000;
 
 
+
 int testAlarmCallback(int64_t alarmTime, void* pContext)
 {
-	//Test Alarm Callback
-	char* buf = "Alarm Callback\r\n";
-	E4E_Printf(buf);
-
 	return E4E_OK;
 }
 
