@@ -109,10 +109,6 @@ int main(void)
 	  }
   }
 
-  if(RTC_DEBUG_LOGIC == E4E_APPLICATION_LOGIC){
-	  setTimeAndAlarm(&pHalSystem->rtcDesc);
-  }
-
 
   /* USER CODE END 2 */
 
