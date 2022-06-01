@@ -17,15 +17,17 @@
 
 #define MS_TO_SEC 1000
 #define PRINT_BUFFER 50
+#define RTC_BACKUP_VAL 0xAAFF
 
-const uint32_t RTC_BACKUP_VAL = 0xAAFF;
 
-E4E_HAL_RTCAlarmCallback alarmCallbackFunction = NULL;
-void* alarmCallbackFunctionContext = NULL;
+typedef struct E4E_HAL_RTC_ATTR_
+{
+	E4E_HAL_RTCAlarmCallback alarmCallbackFunction;
+	void* alarmCallbackFunctionContext;
+	int alarmTriggered;
+	int64_t alarmTime;
 
-int64_t alarmTime;
-int alarmTriggered = 0;
-E4E_HAL_RTCConfig_t g_config;
+}E4E_HAL_RTC_ATTR_t;
 
 
 #if E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
@@ -34,11 +36,13 @@ E4E_HAL_RTCConfig_t g_config;
     #define  DEBUG_MSG(...) {}
 #endif
 
-
+static E4E_HAL_RTC_ATTR_t g_attr;
+static E4E_HAL_RTCConfig_t g_config;
 
 int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 {
 	pDesc->pHalDesc=&hrtc;
+	pDesc->pAttrDesc=&g_attr;
 
 	//Default Config if no RTC config is passed in
 	if(NULL == pConfig){
@@ -50,6 +54,11 @@ int E4E_HAL_RTC_init(E4E_HAL_RTCDesc_t *pDesc, E4E_HAL_RTCConfig_t *pConfig)
 	}else{
 		g_config = *pConfig;
 	}
+
+	g_attr.alarmTriggered = 0;
+	g_attr.alarmTime = -1;
+	g_attr.alarmCallbackFunction = NULL;
+	g_attr.alarmCallbackFunctionContext = NULL;
 
 	return E4E_OK;
 }
@@ -95,7 +104,7 @@ int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime)
 
 	//Debug Printing
 	DEBUG_MSG("STM Time -  %d/%d/%d   %d:%d:%d:%d Alarm Triggered: %d\r\n", sDate.Month, sDate.Date, sDate.Year,
-			sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction, alarmTriggered);
+			sTime.Hours, sTime.Minutes, sTime.Seconds,sec_Fraction, g_attr.alarmTriggered);
 
 	return E4E_OK;
 }
@@ -148,11 +157,11 @@ int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm)
 {
 	RTC_TimeTypeDef sTime;
 	RTC_AlarmTypeDef sAlarm;
-	alarmTime = alarm;
 	struct tm time;
 	int sec_Fraction;
 
-	alarmTriggered = 0;
+	g_attr.alarmTime = alarm;
+	g_attr.alarmTriggered = 0;
 
 	//Date/Time Conversion
 	time_t alarmtime_seconds = (time_t)(alarm/MS_TO_SEC);
@@ -194,19 +203,19 @@ int E4E_HAL_RTC_registerAlarmCallback(E4E_HAL_RTCDesc_t *pDesc,
 		E4E_HAL_RTCAlarmCallback pCallback, void* pContext)
 {
 	//Set Alarm Callback Function
-	alarmCallbackFunction = pCallback;
-	alarmCallbackFunctionContext = pContext;
+	g_attr.alarmCallbackFunction = pCallback;
+	g_attr.alarmCallbackFunctionContext = pContext;
 	return E4E_OK;
 }
 
 
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 {
-	alarmTriggered = 1;
+	g_attr.alarmTriggered = 1;
 
 	//Alarm Callback
-	if(NULL != alarmCallbackFunction){
-		alarmCallbackFunction(alarmTime, alarmCallbackFunctionContext);
+	if(NULL != g_attr.alarmCallbackFunction){
+		g_attr.alarmCallbackFunction(g_attr.alarmTime, g_attr.alarmCallbackFunctionContext);
 	}
 
 }

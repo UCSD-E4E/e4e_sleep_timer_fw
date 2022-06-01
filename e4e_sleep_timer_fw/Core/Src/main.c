@@ -100,10 +100,6 @@ int main(void)
   E4E_HAL_System_init();
   int64_t currTime = 0;
 
-  if(E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC){
-	  setTimeAndAlarm(&pHalSystem->rtcDesc);
-  }
-
 
   if(E4E_ERROR == E4E_HAL_System_init())
   {
@@ -112,6 +108,11 @@ int main(void)
 
 	  }
   }
+
+  if(RTC_DEBUG_LOGIC == E4E_APPLICATION_LOGIC){
+	  setTimeAndAlarm(&pHalSystem->rtcDesc);
+  }
+
 
   /* USER CODE END 2 */
 
