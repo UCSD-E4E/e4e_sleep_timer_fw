@@ -20,5 +20,6 @@
 void E4E_Println(const char* fmt, ...);
 void E4E_Printf(const char* fmt, ...);
 int getch(void);
+int E4E_gets(char* pBuffer, int buflen);
 
 #endif /* INC_DEBUG_CONIO_H_ */
