@@ -93,6 +93,7 @@ int E4E_DebugMenuProcess(const E4E_DebugMenu_t *const pMenu)
 
 static int E4E_DebugMenuCom1Echo(void)
 {
+	E4E_Printf(">");
 	const size_t BUFSIZE = 1;
 	uint8_t buffer[BUFSIZE];
 	E4E_HAL_SerialDesc_t* pSerial;
