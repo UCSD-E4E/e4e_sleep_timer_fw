@@ -18,12 +18,16 @@
 static int testWrite(void);
 static int testRead(void);
 static int E4E_DebugMenuCom1Echo(void);
+static int E4E_DebugMenuCom1BlockedEcho(void);
+
+#define BLOCK_SIZE	5
 
 E4E_DebugMenu_t testMenu[] =
 {
 		{'a', E4E_DebugMenuType_Cmd, NULL, testWrite, "Test Serial Write"},
 		{'b', E4E_DebugMenuType_Cmd, NULL, testRead, "Test Serial Read"},
 		{'e', E4E_DebugMenuType_Cmd, NULL, E4E_DebugMenuCom1Echo, "UART1 Echo"},
+		{'E', E4E_DebugMenuType_Cmd, NULL, E4E_DebugMenuCom1BlockedEcho, "UART1 Blocked Echo"},
 		{'\0', E4E_DebugMenuType_Null, NULL, NULL, NULL}
 };
 
@@ -95,6 +99,25 @@ static int E4E_DebugMenuCom1Echo(void)
 {
 	E4E_Printf(">");
 	const size_t BUFSIZE = 1;
+	uint8_t buffer[BUFSIZE];
+	E4E_HAL_SerialDesc_t* pSerial;
+
+	pSerial = &pHalSystem->debugSerialDesc;
+
+	while(1)
+	{
+		if(E4E_OK != E4E_HAL_Serial_read(pSerial, buffer, BUFSIZE, UINT32_MAX))
+		{
+			continue;
+		}
+		HAL_UART_Transmit(&huart2, buffer, BUFSIZE, 1000);
+	}
+}
+
+static int E4E_DebugMenuCom1BlockedEcho(void)
+{
+	E4E_Printf(">");
+	const size_t BUFSIZE = BLOCK_SIZE;
 	uint8_t buffer[BUFSIZE];
 	E4E_HAL_SerialDesc_t* pSerial;
 
