@@ -106,7 +106,7 @@ static int E4E_DebugMenuCom1Echo(void)
 		{
 			continue;
 		}
-		E4E_Printf("%c", buffer[0]);
+		HAL_UART_Transmit(&huart2, buffer, BUFSIZE, 1000);
 	}
 }
 
