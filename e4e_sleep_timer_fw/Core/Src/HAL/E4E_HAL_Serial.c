@@ -18,9 +18,9 @@ static E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS]
  */
 static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
 	if (huart == &hlpuart1) {
-		return uart_handle_to_descriptor_table[0].e4eSerialDesc;
+		return uart_handle_to_descriptor_table[E4E_HAL_SerialDevice_Command].e4eSerialDesc;
 	} else if (huart == &huart1) {
-		return uart_handle_to_descriptor_table[1].e4eSerialDesc;
+		return uart_handle_to_descriptor_table[E4E_HAL_SerialDevice_Debug].e4eSerialDesc;
 	}
 	return NULL;
 }
@@ -46,7 +46,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		return E4E_ERROR;
 	}
 
-	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[portNum]);
+	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[device]);
 	portNum++;
 	switch(device) {
 	case E4E_HAL_SerialDevice_Command:
@@ -65,7 +65,6 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		return E4E_ERROR;
 	};
 
-	pDesc->headPos = 0;
 	pDesc->readStatus = E4E_Serial_Done;
 	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->rbmem, RING_BUF_SIZE)) {
 		return E4E_ERROR;
@@ -140,8 +139,6 @@ int E4E_HAL_Serial_flush(E4E_HAL_SerialDesc_t *pDesc) {
 		return E4E_ERROR;
 	}
 
-	pDesc->headPos = 0;
-
 	return E4E_OK;
 }
 
@@ -152,31 +149,9 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
 		// should theoretically never get here
 		return;
 	}
-	/* Check if number of received data in reception buffer has changed */
-	if (size != serialDesc->headPos){
 
-	 /* Check if position of index in reception buffer has simply be increased
-	       of if end of buffer has been reached */
-	    if (size > serialDesc->headPos)
-	    {
-	      /* Current position is higher than previous one */
-	      ring_buffer_put(serialDesc->ringBufDesc, size - serialDesc->headPos);
-	    }
-	    else
-	    {
-	      /* Current position is lower than previous one : end of buffer has been reached */
-	      /* Update head pointer of the ring buffer to the end */
-	      ring_buffer_put(serialDesc->ringBufDesc, RING_BUF_SIZE - serialDesc->headPos);
+	ring_buffer_handler(serialDesc->ringBufDesc, size);
 
-	      /* Check and continue with beginning of buffer */
-	      if (size > 0)
-	      {
-	    	ring_buffer_put(serialDesc->ringBufDesc, size);
-	      }
-	    }
-
-	}
-	serialDesc->headPos = size;
 	serialDesc->readStatus = E4E_Serial_Done;
 }
 

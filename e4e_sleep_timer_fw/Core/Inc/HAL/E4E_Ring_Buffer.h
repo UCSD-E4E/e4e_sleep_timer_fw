@@ -64,6 +64,14 @@ int ring_buffer_get(RBuf_Desc_t rbd, void *data, int count);
 int ring_buffer_put(RBuf_Desc_t rbd, int count);
 
 /**
+ * @brief Handles updating the head pointer for the ring buffer during event callbacks
+ * @param rbd Index of buffer in global array of ring buffers
+ * @param new_local_head_pos The new location of the head pointer inside the ring buffer
+ * @return E4E_OK if head pointer incremented successfully, else E4E_ERROR
+ */
+int ring_buffer_handler(RBuf_Desc_t rbd, int new_local_head_pos);
+
+/**
  * @brief Clear all items from the ring buffer
  * @param rbd Index of buffer in global array of ring buffers
  * @return E4E_OK if ring buffer successfully cleared, else E4E_ERROR

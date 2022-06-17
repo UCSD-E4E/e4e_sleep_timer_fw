@@ -41,7 +41,15 @@ int ring_buffer_get(RBuf_Desc_t rbd, void *data, int count) {
 	}
 	if ((rbd < RING_BUFFER_MAX) && !(ring_buffer_empty(&_rb[rbd]))) {
 		const size_t offset = _rb[rbd].tail & (_rb[rbd].n_elem - 1);
-		memcpy(data, &(_rb[rbd].buf[offset]), count);
+		// check that we are not reading off the end of the ring buffer
+		if (count > _rb[rbd].n_elem - offset) {
+			// reading from both end and beginning of ring buffer
+			memcpy(data, &(_rb[rbd].buf[offset]), _rb[rbd].n_elem - offset);
+			memcpy(data, &(_rb[rbd].buf[0]), count - (_rb[rbd].n_elem - offset));
+		}
+		else {
+			memcpy(data, &(_rb[rbd].buf[offset]), count);
+		}
 		_rb[rbd].tail += count;;
 	} else {
 		 return E4E_ERROR;
@@ -58,6 +66,32 @@ int ring_buffer_put(RBuf_Desc_t rbd, int count) {
 	} else {
 		status = E4E_ERROR;
 	}
+	return status;
+}
+
+int ring_buffer_handler(RBuf_Desc_t rbd, int new_local_head_pos) {
+	int status = E4E_OK;
+	const size_t curr_local_head_pos = _rb[rbd].head & (_rb[rbd].n_elem - 1);
+
+	if (new_local_head_pos != curr_local_head_pos) {
+		/* Check if position of index in reception buffer has simply increased
+		   or if end of buffer has been reached */
+		if (new_local_head_pos > curr_local_head_pos){
+			/* Current position is higher than previous one */
+			status = ring_buffer_put(rbd, new_local_head_pos - curr_local_head_pos);
+		}
+		else {
+			/* Current position is lower than previous one : end of buffer has been reached */
+			/* Update head pointer of the ring buffer to the end */
+			status = ring_buffer_put(rbd, _rb[rbd].n_elem - curr_local_head_pos);
+
+			/* Check and continue with beginning of buffer */
+			if (new_local_head_pos > 0) {
+				status = ring_buffer_put(rbd, new_local_head_pos);
+			}
+		}
+	}
+
 	return status;
 }
 

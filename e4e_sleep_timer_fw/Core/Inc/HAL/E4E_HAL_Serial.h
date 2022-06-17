@@ -54,11 +54,6 @@ typedef struct E4E_HAL_SerialDesc_ {
 	uint8_t rbmem[RING_BUF_SIZE];
 
 	/**
-	 * Head of the ring buffer (position of last available byte)
- 	 */
-	volatile uint32_t headPos;
-
-	/**
 	 * Current status of serial read
      */
 	volatile E4E_Serial_Status_e readStatus;
