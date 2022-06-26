@@ -39,16 +39,17 @@ int ring_buffer_get(RBuf_Desc_t rbd, void *data, int count) {
 	if (_rb[rbd].head - _rb[rbd].tail < count) {
 		return E4E_ERROR;
 	}
+	char* temp = (char*) data;
 	if ((rbd < RING_BUFFER_MAX) && !(ring_buffer_empty(&_rb[rbd]))) {
 		const size_t offset = _rb[rbd].tail & (_rb[rbd].n_elem - 1);
 		// check that we are not reading off the end of the ring buffer
 		if (count > _rb[rbd].n_elem - offset) {
 			// reading from both end and beginning of ring buffer
-			memcpy(data, &(_rb[rbd].buf[offset]), _rb[rbd].n_elem - offset);
-			memcpy(data, &(_rb[rbd].buf[0]), count - (_rb[rbd].n_elem - offset));
+			memcpy(temp, &(_rb[rbd].buf[offset]), _rb[rbd].n_elem - offset);
+			memcpy(temp + (_rb[rbd].n_elem - offset), &(_rb[rbd].buf[0]), count - (_rb[rbd].n_elem - offset));
 		}
 		else {
-			memcpy(data, &(_rb[rbd].buf[offset]), count);
+			memcpy(temp, &(_rb[rbd].buf[offset]), count);
 		}
 		_rb[rbd].tail += count;;
 	} else {
