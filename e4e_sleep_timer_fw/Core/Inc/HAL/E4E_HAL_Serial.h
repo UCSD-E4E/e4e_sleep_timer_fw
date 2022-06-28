@@ -55,7 +55,7 @@ typedef struct E4E_HAL_SerialDesc_ {
 
 	/**
 	 * Current status of serial read
-     */
+	 */
 	volatile E4E_Serial_Status_e readStatus;
 
 } E4E_HAL_SerialDesc_t;
