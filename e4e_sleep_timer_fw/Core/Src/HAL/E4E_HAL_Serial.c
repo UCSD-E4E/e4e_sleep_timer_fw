@@ -49,7 +49,7 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	}
 
 	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[device]);
-	if (device > NUM_PORTS) {
+	if (device >= NUM_PORTS) {
 		return E4E_ERROR;
 	} else {
 		pDesc->uartHandle = tableEntry->uartHandle;
