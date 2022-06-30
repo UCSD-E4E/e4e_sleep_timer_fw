@@ -17,10 +17,10 @@ static E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS]
  * @return The corresponding E4E_UARTHandle_To_SerialDesc_t as set in E4E_Hal_Serial_init
  */
 static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
-	if (huart == &hlpuart1) {
-		return uart_handle_to_descriptor_table[E4E_HAL_SerialDevice_Command].e4eSerialDesc;
-	} else if (huart == &huart1) {
-		return uart_handle_to_descriptor_table[E4E_HAL_SerialDevice_Debug].e4eSerialDesc;
+	for (int i = 0; i < NUM_PORTS; i++) {
+		if (huart == uart_handle_to_descriptor_table[i].uartHandle) {
+			return uart_handle_to_descriptor_table[i].e4eSerialDesc;
+		}
 	}
 	return NULL;
 }
@@ -31,8 +31,6 @@ static E4E_HAL_SerialDesc_t * get_desc_from_handle(UART_HandleTypeDef *huart) {
  */
 int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		E4E_HAL_SerialDevice_e device, E4E_HAL_SerialConfig_t *pConfig) {
-	static uint8_t portNum = 0;
-
 	// initialize ring buffer
 	RBuf_Attr_t rb_attr;
 	rb_attr.n_elem = RING_BUF_SIZE;
@@ -47,7 +45,6 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	}
 
 	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[device]);
-	portNum++;
 	switch(device) {
 	case E4E_HAL_SerialDevice_Command:
 		// initialize the port for command device
