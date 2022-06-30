@@ -9,7 +9,11 @@
 #include <E4E_HAL_Serial.h>
 #include <e4e_common.h>
 
-static E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS];
+static E4E_UARTHandle_To_SerialDesc_t uart_handle_to_descriptor_table[NUM_PORTS] =
+{
+		{&hlpuart1, NULL},
+		{&huart1, NULL}
+};
 
 /**
  * @brief Gets a E4E_Hal_SerialDesc_t given its corresponding UART_HandleTypeDef
@@ -45,22 +49,12 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 	}
 
 	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[device]);
-	switch(device) {
-	case E4E_HAL_SerialDevice_Command:
-		// initialize the port for command device
-		pDesc->uartHandle = &hlpuart1;
-		tableEntry->uartHandle = &hlpuart1;
-		tableEntry->e4eSerialDesc = pDesc;
-		break;
-	case E4E_HAL_SerialDevice_Debug:
-		// initialize the debug port
-		pDesc->uartHandle = &huart1;
-		tableEntry->uartHandle = &huart1;
-		tableEntry->e4eSerialDesc = pDesc;
-		break;
-	default:
+	if (device > NUM_PORTS) {
 		return E4E_ERROR;
-	};
+	} else {
+		pDesc->uartHandle = tableEntry->uartHandle;
+		tableEntry->e4eSerialDesc = pDesc;
+	}
 
 	pDesc->readStatus = E4E_Serial_Done;
 	if (HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(pDesc->uartHandle, pDesc->rbmem, RING_BUF_SIZE)) {
