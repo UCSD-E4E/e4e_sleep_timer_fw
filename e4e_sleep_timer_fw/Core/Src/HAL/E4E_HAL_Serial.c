@@ -48,10 +48,10 @@ int E4E_HAL_Serial_init(E4E_HAL_SerialDesc_t *pDesc,
 		return E4E_ERROR;
 	}
 
-	E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[device]);
 	if (device >= NUM_PORTS) {
 		return E4E_ERROR;
 	} else {
+		E4E_UARTHandle_To_SerialDesc_t *tableEntry = &(uart_handle_to_descriptor_table[device]);
 		pDesc->uartHandle = tableEntry->uartHandle;
 		tableEntry->e4eSerialDesc = pDesc;
 	}
@@ -89,13 +89,27 @@ int E4E_HAL_Serial_read(E4E_HAL_SerialDesc_t *pDesc, void *pBuffer,
 	}
 
 	uint32_t start_time = HAL_GetTick();
+	uint32_t total_chars_read = 0;
+	uint8_t * pCharBuffer = (uint8_t *) pBuffer;
 	while (HAL_GetTick() - start_time < timeout) {
 		// check if bytes have been received
 		if(E4E_Serial_Done == pDesc->readStatus) {
-			if (E4E_ERROR == ring_buffer_get(pDesc->ringBufDesc, pBuffer, count)) {
-				pDesc->readStatus = E4E_Serial_Waiting;
+			// we read any available bytes in the ring buffer, reading a max of count bytes
+			size_t chars_to_get = get_ring_buffer_available_chars(pDesc->ringBufDesc);
+			if (chars_to_get > count - total_chars_read) {
+				chars_to_get = count - total_chars_read;
+			}
+
+			if (E4E_OK == ring_buffer_get(pDesc->ringBufDesc, pCharBuffer + total_chars_read, chars_to_get)) {
+				// read is successful, add number of characters read to total
+				total_chars_read += chars_to_get;
+				if (total_chars_read < count) {
+					pDesc->readStatus = E4E_Serial_Waiting;
+				} else {
+					return E4E_OK;
+				}
 			} else {
-				return E4E_OK;
+				pDesc->readStatus = E4E_Serial_Waiting;
 			}
 		}
 	}
@@ -112,7 +126,7 @@ int E4E_HAL_Serial_write(E4E_HAL_SerialDesc_t *pDesc, const void *pData,
 		return E4E_ERROR;
 	}
 
-	if (HAL_OK != HAL_UART_Transmit(pDesc->uartHandle, pData, nBytes, timeout)) {
+	if (HAL_OK != HAL_UART_Transmit(pDesc->uartHandle, (void *) pData, nBytes, timeout)) {
 		return E4E_ERROR;
 	}
 	return E4E_OK;

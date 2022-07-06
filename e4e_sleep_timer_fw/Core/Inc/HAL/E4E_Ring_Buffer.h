@@ -78,4 +78,11 @@ int ring_buffer_handler(RBuf_Desc_t rbd, int new_local_head_pos);
  */
 int ring_buffer_clear(RBuf_Desc_t rbd);
 
+/**
+ * @brief Get the number of available characters in the ring buffer.
+ * @param rbd Index of buffer in global array of ring buffers
+ * @return The number of available characters, equal to the difference between the head and tail pointers.
+ */
+int get_ring_buffer_available_chars(RBuf_Desc_t rbd);
+
 #endif /* INC_HAL_E4E_RING_BUFFER_H_ */

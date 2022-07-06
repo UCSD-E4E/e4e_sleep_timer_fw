@@ -103,6 +103,13 @@ int ring_buffer_clear(RBuf_Desc_t rbd) {
 	return E4E_OK;
 }
 
+int get_ring_buffer_available_chars(RBuf_Desc_t rbd) {
+	if (rbd >= RING_BUFFER_MAX) {
+		return 0;
+	}
+	return _ring_buffer_table[rbd].head - _ring_buffer_table[rbd].tail;
+}
+
 
 static int ring_buffer_full(struct ring_buffer *rb) {
 	return ((rb->head - rb->tail) == rb->n_elem) ? 1 : 0;
