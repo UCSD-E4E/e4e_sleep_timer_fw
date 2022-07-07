@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "lptim.h"
 #include "usart.h"
 #include "rtc.h"
@@ -29,6 +30,7 @@
 #include <e4e_common.h>
 #include <E4E_ST_App.h>
 #include <stm32g0xx.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,6 +94,9 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_LPTIM1_Init();
+
+  // MX_DMA_Init enables DMA clock and UART_init enables DMA channels, need to initialize DMA first
+  MX_DMA_Init();
   MX_LPUART1_UART_Init();
   MX_USART1_UART_Init();
   MX_RTC_Init();
@@ -164,10 +169,12 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE2);
+
   /** Configure LSE Drive Capability
   */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -181,6 +188,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK

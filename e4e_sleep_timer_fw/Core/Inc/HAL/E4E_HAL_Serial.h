@@ -10,20 +10,14 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <usart.h>
+#include <E4E_Ring_Buffer.h>
 
-/**
- * Serial Driver Descriptor
- */
-typedef struct E4E_HAL_SerialDesc_ {
-	/**
-	 * Underlying HAL Descriptor
-	 */
-	void *pHalDesc;
-	/**
-	 * Attribute Descriptor
-	 */
-	void *pAttrDesc;
-} E4E_HAL_SerialDesc_t;
+/** Size of a ring buffer */
+#define RING_BUF_SIZE 128
+
+/** Current number of serial ports active */
+#define NUM_PORTS 2
 
 /**
  * Serial Configuration Structure
@@ -33,6 +27,42 @@ typedef struct E4E_HAL_SerialConfig_ {
 } E4E_HAL_SerialConfig_t;
 
 /**
+ * Serial line status
+ */
+typedef enum E4E_Serial_Status {
+	E4E_Serial_Waiting,/**< Wait - driver is still waiting to receive bytes */
+	E4E_Serial_Done    /**< Done - driver is ready */
+} E4E_Serial_Status_e;
+
+/**
+ * Serial Driver Descriptor
+ */
+typedef struct E4E_HAL_SerialDesc_ {
+	/**
+	 * Underlying HAL Descriptor
+	 */
+	UART_HandleTypeDef *uartHandle;
+
+	/**
+	 * Ring buffer descriptor
+	 */
+	RBuf_Desc_t ringBufDesc;
+
+	/**
+	 * Ring buffer memory
+	 */
+	uint8_t rbmem[RING_BUF_SIZE];
+
+	/**
+	 * Current status of serial read
+	 */
+	volatile E4E_Serial_Status_e readStatus;
+
+} E4E_HAL_SerialDesc_t;
+
+
+
+/**
  * Serial Device Enumerators
  */
 typedef enum E4E_HAL_SerialDevice_ {
@@ -40,6 +70,14 @@ typedef enum E4E_HAL_SerialDevice_ {
 	E4E_HAL_SerialDevice_Debug,  /**< Debug Port - USART1 */
 	E4E_HAL_SerialDevice__NELEMS /**< Number of Serial Ports */
 } E4E_HAL_SerialDevice_e;
+
+/**
+ * Maps lower level UART_HandleTypeDef to E4E_HAL_SerialDesc_t
+ */
+typedef struct E4E_UARTHandle_To_SerialDesc_ {
+	UART_HandleTypeDef *uartHandle;
+	E4E_HAL_SerialDesc_t *e4eSerialDesc;
+} E4E_UARTHandle_To_SerialDesc_t;
 
 /**
  * @brief Initializes the Serial Driver
