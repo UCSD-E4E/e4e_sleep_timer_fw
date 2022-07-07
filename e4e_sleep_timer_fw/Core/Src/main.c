@@ -23,7 +23,6 @@
 #include "usart.h"
 #include "rtc.h"
 #include "gpio.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <product.h>
@@ -103,6 +102,10 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
+  E4E_HAL_System_init();
+  int64_t currTime = 0;
+
+
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
@@ -110,6 +113,7 @@ int main(void)
 
 	  }
   }
+
 
   /* USER CODE END 2 */
 
@@ -137,6 +141,9 @@ int main(void)
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
+	  E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, &currTime);
+	  HAL_Delay(500);
+
 #elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == CMD_DEBUG_LOGIC
@@ -197,6 +204,8 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
 
 /* USER CODE END 4 */
 

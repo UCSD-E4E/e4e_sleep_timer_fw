@@ -12,7 +12,6 @@ E4E_HAL_System_t halSystem, *pHalSystem = &halSystem;
 int E4E_HAL_System_init(void)
 {
 	E4E_HAL_SerialConfig_t serialConfig;
-	E4E_HAL_RTCConfig_t rtcConfig;
 	E4E_HAL_PWRCTRLConfig_t pwrConfig;
 
 
@@ -28,7 +27,7 @@ int E4E_HAL_System_init(void)
 	{
 		return E4E_ERROR;
 	}
-	if (E4E_ERROR == E4E_HAL_RTC_init(&pHalSystem->rtcDesc, &rtcConfig))
+	if (E4E_ERROR == E4E_HAL_RTC_init(&pHalSystem->rtcDesc, NULL))
 	{
 		return E4E_ERROR;
 	}
