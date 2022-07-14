@@ -1,3 +1,13 @@
+typedef struct header_ {
+    uint16_t start;
+    uint16_t length;
+    uint16_t cmd_id;
+} header_t;
+uint8_t buffer[128];
+header_t* pHeader = (header_t*) buffer;
+size_t idx = 0;
+
+
 typedef enum state_
 {
     SEARCH,
