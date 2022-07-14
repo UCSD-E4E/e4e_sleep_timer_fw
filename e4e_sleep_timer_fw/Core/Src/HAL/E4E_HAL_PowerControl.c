@@ -21,29 +21,27 @@
  */
 int E4E_HAL_PwrCtrl_init(E4E_HAL_PWRCTRLDesc_t *pDesc, E4E_HAL_PWRCTRLDevice_e device, E4E_HAL_PWRCTRLConfig_t *pConfig)
 {
-	if (device == E4E_HAL_PWRCTRL_Device_OBC)
-		{
-		E4E_Printf("Device: OBC"); //confirmation a valid device was selected
-			if (pDesc == E4E_HAL_PWRCTRL_State_ON) //power descriptor is selected to be ON
-			{
-				E4E_HAL_PwrCtrl_setState(pDesc, E4E_HAL_PWRCTRL_State_ON); //set state to ON
-				E4E_Printf("Device: OBC ON"); //confirmation
-				return E4E_OK;
-			}
 
-			else //if for some reason pDesc is set as OFF then proceed to set state as OFF
-			{
-				E4E_HAL_PwrCtrl_setState(pDesc, E4E_HAL_PWRCTRL_State_OFF); //set to OFF
-				E4E_Printf("Device: OBC OFF"); //confirmation
-				return E4E_OK;
-			}
-		}
-
-	else //if an undefined device is selected output error
+	if (NULL == pDesc)
 		{
 			return E4E_ERROR;
 		}
 
+	if (E4E_HAL_PWRCTRL_Device__NELEMS <= device)
+		{
+			return E4E_ERROR;
+		}
+	else if (E4E_HAL_PWRCTRL_Device_OBC == device && pConfig->DefaultPower >= 0)
+		{
+			E4E_Printf("Device: OBC"); //confirmation a valid device was selected
+			HAL_GPIO_WritePin(SYS_PWR_GPIO_Port, SYS_PWR_Pin, GPIO_PIN_SET); //set state to ON
+			E4E_Printf("Device: OBC ON"); //confirmation
+			return E4E_OK;
+		}
+	else
+		{
+			return E4E_ERROR;
+		}
 }
 
 /**
@@ -53,10 +51,11 @@ int E4E_HAL_PwrCtrl_init(E4E_HAL_PWRCTRLDesc_t *pDesc, E4E_HAL_PWRCTRLDevice_e d
  * @return	E4E_OK if successful, otherwise E4E_ERROR
  */
 int E4E_HAL_PwrCtrl_setState(E4E_HAL_PWRCTRLDesc_t *pDesc,E4E_HAL_PWRCTRL_State_e state)
-
 {
-
-
+	if (NULL == pDesc)
+		{
+			return E4E_ERROR;
+		}
 
 	if(E4E_HAL_PWRCTRL_State_ON == state)
 		{
@@ -73,8 +72,8 @@ int E4E_HAL_PwrCtrl_setState(E4E_HAL_PWRCTRLDesc_t *pDesc,E4E_HAL_PWRCTRL_State_
 		{
 			return E4E_ERROR;
 		}
-
 }
+
 
 
 /**
@@ -84,18 +83,16 @@ int E4E_HAL_PwrCtrl_setState(E4E_HAL_PWRCTRLDesc_t *pDesc,E4E_HAL_PWRCTRL_State_
  */
 int E4E_HAL_PwrCtrl_deinit(E4E_HAL_PWRCTRLDesc_t *pDesc)
 {
-
-
-	if (pDesc == E4E_HAL_PWRCTRL_State_OFF) //defaults OBC to OFF
-		{
-			E4E_HAL_PwrCtrl_setState(pDesc, E4E_HAL_PWRCTRL_State_OFF);
-			E4E_Printf("Device: OBC OFF");
-			return E4E_OK;
-		}
-
-	else //in the case the OBC fails to de-initialize
+	if (NULL == pDesc)
 		{
 			return E4E_ERROR;
+		}
+
+	else
+		{
+			HAL_GPIO_WritePin(SYS_PWR_GPIO_Port, SYS_PWR_Pin, GPIO_PIN_RESET);//sets pin low
+			E4E_Printf("Device: OBC OFF");
+			return E4E_OK;
 		}
 
 }
