@@ -3,7 +3,9 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "parser.h"
+#include "parse.h"
+#include <Debug/conio.h>
+#include <e4e_common.h>
 
 uint8_t buffer[128]; 
 header_t* pHeader = (header_t*) buffer; // points to buffer as a struct (access message like member vars)
@@ -15,16 +17,16 @@ state_t state = SEARCH; // initial state is SEARCH (0)
 int parse(char c) // parse chars one at a time from serial
 {
 	buffer[idx] = c; // put char in buffer
-    printf("char %x\t idx %zu\t", c, idx);
+    E4E_Printf("char %x\t idx %zu\t", c, idx);
     switch(state)
     {
         case SEARCH:
-            printf("SEARCH\n");
+            E4E_Printf("SEARCH\n");
             if (buffer[0] == 0xEB)
             {
 				if (idx == 0) { // checks that second byte is parsed
                     idx++;
-                    return 0;
+                    return E4E_OK;
                 } else if (buffer[1] == 0xE4) { // if start is 0xE4EB move to header
                     state = HEADER;
                     idx++;
@@ -36,7 +38,7 @@ int parse(char c) // parse chars one at a time from serial
             }
 			break;
 		case HEADER:
-                    printf("HEADER\n");
+                    E4E_Printf("HEADER\n");
 			idx++;
             if (idx == HEADLEN) // if header has been parsed move to args
 			{
@@ -45,7 +47,7 @@ int parse(char c) // parse chars one at a time from serial
 
 			break;
 		case MSG:
-                    printf("MSG\n");
+                    E4E_Printf("MSG\n");
             if (idx < pHeader->length)
                 {
                 idx++;
@@ -53,17 +55,17 @@ int parse(char c) // parse chars one at a time from serial
                 }
 			if (idx == pHeader->length) // if all args parsed
 			{
-                            printf("callfunc\n");
+                            E4E_Printf("callfunc\n");
                 if(callfunc() != 0) { // call callfunc() and check for error
-                    fprintf(stderr, "Error with callfunc()");
-                    return 1;
+                    E4E_Printf(stderr, "Error with callfunc()");
+                    return E4E_ERROR;
                 }
 		    }
 		default:
 			idx = 0;
 			state = SEARCH; 
 	}
-    return 0;
+    return E4E_OK;
 }
 
 int callfunc() {
@@ -71,26 +73,27 @@ int callfunc() {
     switch (pHeader->cmd_id) {
         case SET_ALARM:
             ptime = (extime_t *)(buffer);
-            if (setAlarm(ptime->sec) != 0){ 
-                fprintf(stderr, "Error with setAlarm()");
-                    return 1;
+            int wakeTime = (ptime->sec) * 1000;
+            if (E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, wakeTime) != 0){ 
+                E4E_Printf(stderr, "Error with setAlarm()");
+                    return E4E_ERROR;
             }
             break;
         case SET_TIME:
             ptime = (extime_t*) buffer;
             if (setTime(ptime->sec) != 0){
-                fprintf(stderr, "Error with setTime()");
-                    return 1;
+                E4E_Printf(stderr, "Error with setTime()");
+                    return E4E_ERROR;
             }
             break;
         case GET_TIME:
            if (getTime() != 0){
-                fprintf(stderr, "Error with getTime()");
-                    return 1;
+                E4E_Printf(stderr, "Error with getTime()");
+                    return E4E_ERROR;
             } 
             break;
         default:
-            fprintf(stderr, "Error: couldn't find cmd");
+            E4E_Printf(stderr, "Error: couldn't find cmd");
     }
-    return 0;
+    return E4E_OK;
 }
