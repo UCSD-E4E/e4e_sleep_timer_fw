@@ -3,7 +3,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "parse.h"
+#include <parser.h>
 #include <Debug/conio.h>
 #include <e4e_common.h>
 
@@ -74,26 +74,48 @@ int callfunc() {
         case SET_ALARM:
             ptime = (extime_t *)(buffer);
             int wakeTime = (ptime->sec) * 1000;
-            if (E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, wakeTime) != 0){ 
+            if (E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, wakeTime) != E4E_OK){ 
                 E4E_Printf(stderr, "Error with setAlarm()");
                     return E4E_ERROR;
             }
             break;
         case SET_TIME:
             ptime = (extime_t*) buffer;
-            if (setTime(ptime->sec) != 0){
+            int desiredTime = (ptime->sec) * 1000;
+            if (E4E_HAL_RTC_setTime(&pHalSystem->rtcDesc, desiredTime) != E4E_OK){
                 E4E_Printf(stderr, "Error with setTime()");
                     return E4E_ERROR;
             }
             break;
         case GET_TIME:
-           if (getTime() != 0){
+            ptime = (extime_t*) buffer;
+            int Datetime = (ptime->sec) * 1000;
+           if (E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, Datetime) != E4E_OK){
                 E4E_Printf(stderr, "Error with getTime()");
                     return E4E_ERROR;
             } 
             break;
+        case CLEAR_ALARM:
+            if (E4E_HAL_RTC_clearAlarm(&pHalSystem->rtcDesc) != E4E_OK){
+                E4E_Printf(stderr, "Error with clearAlarm()");
+                    return E4E_ERROR;
+            }
+            break;
+        case CLEAR_ALARM:
+            if (E4E_HAL_RTC_clearAlarm(&pHalSystem->rtcDesc) != E4E_OK){
+                E4E_Printf(stderr, "Error with clearAlarm()");
+                    return E4E_ERROR;
+            }
+            break;
+        case SET_STATE: //called to turn OFF when desired
+            if (E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc,E4E_HAL_PWRCTRL_State_OFF) != E4E_OK){
+                E4E_Printf(stderr, "Error with setState()");
+                    return E4E_ERROR;
+            }
+            break;
         default:
             E4E_Printf(stderr, "Error: couldn't find cmd");
+                return E4E_ERROR;
     }
     return E4E_OK;
 }
