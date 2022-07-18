@@ -101,12 +101,6 @@ int callfunc() {
                     return E4E_ERROR;
             }
             break;
-        case CLEAR_ALARM:
-            if (E4E_HAL_RTC_clearAlarm(&pHalSystem->rtcDesc) != E4E_OK){
-                E4E_Printf(stderr, "Error with clearAlarm()");
-                    return E4E_ERROR;
-            }
-            break;
         case SET_STATE: //called to turn OFF when desired
             if (E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc,E4E_HAL_PWRCTRL_State_OFF) != E4E_OK){
                 E4E_Printf(stderr, "Error with setState()");
