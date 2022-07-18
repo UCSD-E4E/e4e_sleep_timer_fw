@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <parser.h>
 #include <Debug/conio.h>
 #include <e4e_common.h>
+#include <main.h>
 
 uint8_t buffer[128]; 
 header_t* pHeader = (header_t*) buffer; // points to buffer as a struct (access message like member vars)
