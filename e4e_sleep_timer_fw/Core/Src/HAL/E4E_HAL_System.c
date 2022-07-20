@@ -33,3 +33,8 @@ int E4E_HAL_System_init(void)
 	if (E4E_ERROR
 			== E4E_HAL_PwrCtrl_init(&pHalSystem->onboardComputerDesc,
 					E4E_HAL_PWRCTRL_Device_OBC, &pwrConfig))
+	{
+		return E4E_ERROR;
+	}
+	return E4E_OK;
+}
