@@ -12,9 +12,22 @@
 #include <usart.h>
 #include <Debug/conio.h>
 #include <vers.h>
+#include <E4E_HAL_System.h>
+#include <E4E_HAL_PowerControl.h>
+
+static int E4E_DebugMenu_PowerCtrlOBCOn(void);
+static int E4E_DebugMenu_PowerCtrlOBCOff(void);
+
+E4E_DebugMenu_t powerControlMenu[] =
+{
+		{'1', E4E_DebugMenuType_Cmd, NULL, E4E_DebugMenu_PowerCtrlOBCOn, "OBC On"},
+		{'2', E4E_DebugMenuType_Cmd, NULL, E4E_DebugMenu_PowerCtrlOBCOff, "OBC Off"},
+		{ '\0', E4E_DebugMenuType_Null, NULL, NULL, NULL }
+};
 
 E4E_DebugMenu_t debugMenu[] =
 {
+{ '3', E4E_DebugMenuType_Menu, powerControlMenu, NULL, "Power Control"},	
 { '\0', E4E_DebugMenuType_Null, NULL, NULL, NULL } };
 
 void E4E_DebugApp(void)
@@ -73,5 +86,28 @@ int E4E_DebugMenuProcess(const E4E_DebugMenu_t *const pMenu)
 				"Unknown input '%c', please enter one of the options below or ESC to exit",
 				input);
 	} while (1);
+
+}
+
+static int E4E_DebugMenu_PowerCtrlOBCOn(void)
+{
+	E4E_HAL_PWRCTRLDesc_t* pOBC = &pHalSystem->onboardComputerDesc;
+
+	if(E4E_OK != E4E_HAL_PwrCtrl_setState(pOBC, E4E_HAL_PWRCTRL_State_ON))
+	{
+		return E4E_ERROR;
+	}
+	return E4E_OK;
+
+}
+static int E4E_DebugMenu_PowerCtrlOBCOff(void)
+{
+	E4E_HAL_PWRCTRLDesc_t* pOBC = &pHalSystem->onboardComputerDesc;
+
+	if(E4E_OK != E4E_HAL_PwrCtrl_setState(pOBC, E4E_HAL_PWRCTRL_State_OFF))
+	{
+		return E4E_ERROR;
+	}
+	return E4E_OK;
 
 }
