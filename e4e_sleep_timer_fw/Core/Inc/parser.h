@@ -1,44 +1,73 @@
+/*
+ * parser.h
+ *
+ *  Created on: July 7, 2022
+ *      Author: frankc
+ */
+
 #define HEADLEN 6
 
-typedef struct header_ {
-    uint16_t start;
-    uint16_t length;
-    uint16_t cmd_id;
-} header_t;
+/**
+ * Binary Packet attributes
+ */
 
-/* SET ALARM & SET TIME */
-typedef struct extractTime_ {
-    header_t head;
-    uint32_t sec;
-} extime_t;
+typedef struct E4E_BinaryPacket_Header_ {
+    uint16_t start; /**< start bytes of message 0-1 */
+    uint16_t length; /**< length of message 2-3 */
+    uint16_t cmd_id; /**< command id 4-5 */
+} E4E_BinaryPacket_Header_t;
 
-typedef enum state_
+/**
+ * Struct to extract Message from Binary Packet
+ */
+
+typedef struct E4E_BinaryPacket_extractTime_ 
 {
-    SEARCH,
-    HEADER,
-    MSG,
-    ERROR,
-} state_t;
+    E4E_BinaryPacket_Header_t head; /** <header */
+    uint32_t sec; /**<seconds */
+} E4E_BinaryPacket_extime_t;
 
-typedef enum command_
+/**
+ * Binary Packet Message State for parse()
+ */
+
+typedef enum E4E_BinaryPacket_State_
 {
-    SET_TIME,
-    SET_ALARM,
-    CLEAR_ALARM,
-    GET_TIME,
-    SET_STATE,
-} cmd_t;
+    E4E_BinaryPacket_State_SEARCH, /**< SEARCH */
+    E4E_BinaryPacket_State_HEADER, /**< HEADER */
+    E4E_BinaryPacket_State_MSG, /**< MESSAGE */
+    E4E_BinaryPacket_State_ERROR, /**< ERROR */
+    E4E_BinaryPacket_State_NELEMS, /**< Number of states */
+} E4E_BinaryPacket_State_t;
+
+
+/**
+ * Binary Packet Function Commands
+ */
+
+typedef enum E4E_BinaryPacket_CMD_
+{
+    E4E_BinaryPacket_CMD_SET_TIME, /**< setTime */
+    E4E_BinaryPacket_CMD_SET_ALARM, /**< setAlarm */
+    E4E_BinaryPacket_CMD_CLEAR_ALARM, /**< clearAlarm */
+    E4E_BinaryPacket_CMD_GET_TIME, /**< getTime */
+    E4E_BinaryPacket_CMD_SET_STATE, /**< setState */
+    E4E_BinaryPacket_CMD_NELEMS, /**< Number of commands */
+} E4E_BinaryPacket_CMD__t;
+
+/**
+ * @brief Parses message received and stores in buffer
+ * @param char is stored in buffer[]
+ * @return	E4E_OK if successful, otherwise E4E_ERROR
+ */
 
 int parse(char);
 
-//Time and Alarm Functions
-int E4E_HAL_RTC_setTime(E4E_HAL_RTCDesc_t *pDesc, int64_t datetime);
-int E4E_HAL_RTC_setAlarm(E4E_HAL_RTCDesc_t *pDesc, int64_t alarm);
-int E4E_HAL_RTC_clearAlarm(E4E_HAL_RTCDesc_t *pDesc);
-int E4E_HAL_RTC_getTime(E4E_HAL_RTCDesc_t *pDesc, int64_t *pDatetime);
 
-//Power Control Functions
-int E4E_HAL_PwrCtrl_setState(E4E_HAL_PWRCTRLDesc_t *pDesc,E4E_HAL_PWRCTRL_State_e state);
+/**
+ * @brief Called by parse() when full message is received
+ * Forwards message stored in buffer to appropriate HAL function
+ * @return	E4E_OK if successful, otherwise E4E_ERROR
+ */
 
-//General call function
 int callfunc();
