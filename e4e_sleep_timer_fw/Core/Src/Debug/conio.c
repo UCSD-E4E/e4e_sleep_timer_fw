@@ -52,3 +52,30 @@ int getch(void)
 	}
 	return input;
 }
+
+int E4E_gets(char* pBuffer, int buflen)
+{
+	int i;
+	memset(pBuffer, 0, buflen);
+	for(i = 0; i < buflen-1; i++)
+	{
+		pBuffer[i] = getch();
+		switch(pBuffer[i])
+		{
+		case '\r':
+		case '\n':
+			pBuffer[i] = '\0';
+			E4E_Printf("\r\n");
+			return i;
+		case '\x08':
+			i--;
+			E4E_Printf("\b \b");
+			break;
+		default:
+			E4E_Printf("%c", pBuffer[i]);
+			break;
+		}
+	}
+	pBuffer[buflen - 1] = 0;
+	return buflen - 1;
+}

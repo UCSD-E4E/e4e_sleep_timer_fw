@@ -18,11 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "lptim.h"
 #include "usart.h"
 #include "rtc.h"
 #include "gpio.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <product.h>
@@ -30,6 +30,7 @@
 #include <e4e_common.h>
 #include <E4E_ST_App.h>
 #include <stm32g0xx.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,7 +71,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	E4E_ST_AppConfig_t appConfig;
+  E4E_ST_AppConfig_t appConfig;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -93,10 +94,18 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_LPTIM1_Init();
+
+  // MX_DMA_Init enables DMA clock and UART_init enables DMA channels, need to initialize DMA first
+  MX_DMA_Init();
   MX_LPUART1_UART_Init();
   MX_USART1_UART_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+
+  E4E_HAL_System_init();
+  int64_t currTime = 0;
+
+
   if(E4E_ERROR == E4E_HAL_System_init())
   {
 	  while(0)
@@ -104,6 +113,7 @@ int main(void)
 
 	  }
   }
+
 
   /* USER CODE END 2 */
 
@@ -131,6 +141,9 @@ int main(void)
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == RTC_DEBUG_LOGIC
 	  // debug logic
+	  E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, &currTime);
+	  HAL_Delay(500);
+
 #elif E4E_APPLICATION_LOGIC == PWR_CTRL_DEBUG_LOGIC
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == CMD_DEBUG_LOGIC
@@ -156,10 +169,12 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE2);
+
   /** Configure LSE Drive Capability
   */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -173,6 +188,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -188,6 +204,8 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
 
 /* USER CODE END 4 */
 
@@ -222,4 +240,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
