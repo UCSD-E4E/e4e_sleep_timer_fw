@@ -1,18 +1,34 @@
+/*
+ * parser.c
+ *
+ *  Created on: July 7, 2022
+ *      Author: frankc
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
 #include <parser.h>
+#include <HAL/E4E_HAL_RTC.h>
+#include <HAL/E4E_HAL_PowerControl.h>
 #include <Debug/conio.h>
 #include <e4e_common.h>
 #include <main.h>
 
+
+
 uint8_t buffer[128]; 
-header_t* pHeader = (header_t*) buffer; // points to buffer as a struct (access message like member vars)
+E4E_BinaryPacket_Header_t* pHeader = (E4E_BinaryPacket_Header_t*) buffer; // points to buffer as a struct (access message like member vars)
 size_t idx = 0;
 
-state_t state = SEARCH; // initial state is SEARCH (0)
+E4E_BinaryPacket_State_t state = E4E_BinaryPacket_State_SEARCH; // initial state is SEARCH (0)
 
+/**
+ * @brief Parses message received and stores in buffer
+ * @param char is stored in buffer[]
+ * @return	E4E_OK if successful, otherwise E4E_ERROR
+ */
 
 int parse(char c) // parse chars one at a time from serial
 {
@@ -20,7 +36,7 @@ int parse(char c) // parse chars one at a time from serial
     E4E_Printf("char %x\t idx %zu\t", c, idx);
     switch(state)
     {
-        case SEARCH:
+        case E4E_BinaryPacket_State_SEARCH:
             E4E_Printf("SEARCH\n");
             if (buffer[0] == 0xEB)
             {
@@ -28,7 +44,7 @@ int parse(char c) // parse chars one at a time from serial
                     idx++;
                     return E4E_OK;
                 } else if (buffer[1] == 0xE4) { // if start is 0xE4EB move to header
-                    state = HEADER;
+                    state = E4E_BinaryPacket_State_HEADER;
                     idx++;
                 } else if (buffer[1] == 0xEB) { // if second byte might be start
                     buffer[0] = buffer[1];
@@ -37,16 +53,16 @@ int parse(char c) // parse chars one at a time from serial
                 }
             }
 			break;
-		case HEADER:
+		case E4E_BinaryPacket_State_HEADER:
                     E4E_Printf("HEADER\n");
 			idx++;
             if (idx == HEADLEN) // if header has been parsed move to args
 			{
-				state = MSG;
+				state = E4E_BinaryPacket_State_MSG;
 			}
 
 			break;
-		case MSG:
+		case E4E_BinaryPacket_State_MSG:
                     E4E_Printf("MSG\n");
             if (idx < pHeader->length)
                 {
@@ -63,39 +79,40 @@ int parse(char c) // parse chars one at a time from serial
 		    }
 		default:
 			idx = 0;
-			state = SEARCH; 
+			state = E4E_BinaryPacket_State_SEARCH; 
 	}
     return E4E_OK;
 }
 
 int callfunc() {
-    extime_t *ptime; // typecast to extract seconds for setAlarm + setTime
+    E4E_BinaryPacket_extime_t *ptime; // typecast to extract seconds for setAlarm + setTime
     switch (pHeader->cmd_id) {
+
         case SET_ALARM:
-            ptime = (extime_t *)(buffer);
+            ptime = (E4E_BinaryPacket_extime_t *)(buffer);
             int wakeTime = (ptime->sec) * 1000;
             if (E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, wakeTime) != E4E_OK){ 
                 E4E_Printf(stderr, "Error with setAlarm()");
                     return E4E_ERROR;
             }
             break;
-        case SET_TIME:
-            ptime = (extime_t*) buffer;
+        case SET_TIME: //to set desired time on tracker
+            ptime = (E4E_BinaryPacket_extime_t*) buffer;
             int desiredTime = (ptime->sec) * 1000;
             if (E4E_HAL_RTC_setTime(&pHalSystem->rtcDesc, desiredTime) != E4E_OK){
                 E4E_Printf(stderr, "Error with setTime()");
                     return E4E_ERROR;
             }
             break;
-        case GET_TIME:
-            ptime = (extime_t*) buffer;
+        case GET_TIME: //give current time to tracker
+            ptime = (E4E_BinaryPacket_extime_t*) buffer;
             int Datetime = (ptime->sec) * 1000;
            if (E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, Datetime) != E4E_OK){
                 E4E_Printf(stderr, "Error with getTime()");
                     return E4E_ERROR;
             } 
             break;
-        case CLEAR_ALARM:
+        case CLEAR_ALARM: //remove current alarm
             if (E4E_HAL_RTC_clearAlarm(&pHalSystem->rtcDesc) != E4E_OK){
                 E4E_Printf(stderr, "Error with clearAlarm()");
                     return E4E_ERROR;
