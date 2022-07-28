@@ -5,6 +5,9 @@
  *      Author: frankc
  */
 
+
+#ifndef PARSER_H
+#define PARSER_H
 #define HEADLEN 6
 
 /**
@@ -16,16 +19,6 @@ typedef struct E4E_BinaryPacket_Header_ {
     uint16_t length; /**< length of message 2-3 */
     uint16_t cmd_id; /**< command id 4-5 */
 } E4E_BinaryPacket_Header_t;
-
-/**
- * Struct to extract Message from Binary Packet
- */
-
-typedef struct E4E_BinaryPacket_extractTime_ 
-{
-    E4E_BinaryPacket_Header_t head; /** <header */
-    uint32_t sec; /**<seconds */
-} E4E_BinaryPacket_extime_t;
 
 /**
  * Binary Packet Message State for parse()
@@ -63,11 +56,4 @@ typedef enum E4E_BinaryPacket_CMD_
 
 int parse(char);
 
-
-/**
- * @brief Called by parse() when full message is received
- * Forwards message stored in buffer to appropriate HAL function
- * @return	E4E_OK if successful, otherwise E4E_ERROR
- */
-
-int callfunc();
+#endif

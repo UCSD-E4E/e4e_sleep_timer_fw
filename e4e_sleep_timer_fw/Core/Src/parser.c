@@ -15,6 +15,7 @@
 #include <Debug/conio.h>
 #include <e4e_common.h>
 #include <main.h>
+#include "callbacks.h"
 
 
 
@@ -71,8 +72,12 @@ int parse(char c) // parse chars one at a time from serial
                 }
 			if (idx == pHeader->length) // if all args parsed
 			{
-                            E4E_Printf("callfunc\n");
-                if(callfunc() != 0) { // call callfunc() and check for error
+                E4E_Printf("callfunc\n");
+                ParserCallback_t pCallback;
+                void* payload = (void*)((uint8_t*)buffer + sizeof(header_t));
+                size_t payloadLength = msgLength - sizeof(header_t);
+                int retval = parserCallbackTable[pHeader->cmd_id](payload, payloadLength);
+                if(retval != E4E_OK) { // call callfunc() and check for error
                     E4E_Printf(stderr, "Error with callfunc()");
                     return E4E_ERROR;
                 }
@@ -81,52 +86,5 @@ int parse(char c) // parse chars one at a time from serial
 			idx = 0;
 			state = E4E_BinaryPacket_State_SEARCH; 
 	}
-    return E4E_OK;
-}
-
-int callfunc() {
-    E4E_BinaryPacket_extime_t *ptime; // typecast to extract seconds for setAlarm + setTime
-    switch (pHeader->cmd_id) {
-
-        case SET_ALARM:
-            ptime = (E4E_BinaryPacket_extime_t *)(buffer);
-            int wakeTime = (ptime->sec) * 1000;
-            if (E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, wakeTime) != E4E_OK){ 
-                E4E_Printf(stderr, "Error with setAlarm()");
-                    return E4E_ERROR;
-            }
-            break;
-        case SET_TIME: //to set desired time on tracker
-            ptime = (E4E_BinaryPacket_extime_t*) buffer;
-            int desiredTime = (ptime->sec) * 1000;
-            if (E4E_HAL_RTC_setTime(&pHalSystem->rtcDesc, desiredTime) != E4E_OK){
-                E4E_Printf(stderr, "Error with setTime()");
-                    return E4E_ERROR;
-            }
-            break;
-        case GET_TIME: //give current time to tracker
-            ptime = (E4E_BinaryPacket_extime_t*) buffer;
-            int Datetime = (ptime->sec) * 1000;
-           if (E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, Datetime) != E4E_OK){
-                E4E_Printf(stderr, "Error with getTime()");
-                    return E4E_ERROR;
-            } 
-            break;
-        case CLEAR_ALARM: //remove current alarm
-            if (E4E_HAL_RTC_clearAlarm(&pHalSystem->rtcDesc) != E4E_OK){
-                E4E_Printf(stderr, "Error with clearAlarm()");
-                    return E4E_ERROR;
-            }
-            break;
-        case SET_STATE: //called to turn OFF when desired
-            if (E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc,E4E_HAL_PWRCTRL_State_OFF) != E4E_OK){
-                E4E_Printf(stderr, "Error with setState()");
-                    return E4E_ERROR;
-            }
-            break;
-        default:
-            E4E_Printf(stderr, "Error: couldn't find cmd");
-                return E4E_ERROR;
-    }
     return E4E_OK;
 }
