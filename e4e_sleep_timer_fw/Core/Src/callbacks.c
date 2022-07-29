@@ -10,15 +10,17 @@
 #include <main.h>
 #include <HAL/E4E_HAL_System.h>
 
+
 int setAlarmCallback(void* payload, size_t payloadLength)
 {
     struct setAlarmArgs {
-        uint32_t secs;
-    };
+        uint32_t msecs;
+    }__attribute__((packed));
     struct setAlarmArgs* pArgs = (struct setAlarmArgs*) payload;
     if(payloadLength != sizeof(struct setAlarmArgs))
         return E4E_ERROR;
-    return E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, pArgs ->secs* 1000);
+    E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc, E4E_HAL_PWRCTRL_State_OFF);
+    return E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, pArgs->msecs);
 }
 
 int getTimeCallback(void* payload, size_t payloadLength)

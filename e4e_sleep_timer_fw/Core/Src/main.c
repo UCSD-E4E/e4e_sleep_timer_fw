@@ -119,6 +119,7 @@ int main(void)
   E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_SET_ALARM, setAlarmCallback);
   E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_GET_TIME, getTimeCallback);
   E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_CLEAR_ALARM, clearAlarmCallback);
+  E4E_HAL_RTC_registerAlarmCallback(&pHalSystem->rtcDesc, E4E_App_AlarmExecuteCallback, NULL);
   /* USER CODE END 2 */
 
   /* Infinite loop */
