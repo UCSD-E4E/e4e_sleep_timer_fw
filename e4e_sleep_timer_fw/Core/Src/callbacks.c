@@ -38,3 +38,8 @@ int clearAlarmCallback(void* payload, size_t payloadLength)
         return E4E_ERROR;
     return E4E_HAL_RTC_clearAlarm(&pHalSystem->rtcDesc);
 }
+
+int E4E_App_AlarmExecuteCallback(int64_t alarmTime, void* pContext)
+{
+	return E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc, E4E_HAL_PWRCTRL_State_ON);
+}

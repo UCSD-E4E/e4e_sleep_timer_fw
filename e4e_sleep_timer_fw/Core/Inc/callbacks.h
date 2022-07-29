@@ -25,4 +25,6 @@ int getTimeCallback(void*, size_t);
  */
 int clearAlarmCallback(void*, size_t);
 
+int E4E_App_AlarmExecuteCallback(int64_t alarmTime, void* pContext);
+
 #endif
