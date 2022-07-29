@@ -16,11 +16,15 @@ int setAlarmCallback(void* payload, size_t payloadLength)
     struct setAlarmArgs {
         uint32_t msecs;
     }__attribute__((packed));
+    int64_t currentTime;
+
     struct setAlarmArgs* pArgs = (struct setAlarmArgs*) payload;
     if(payloadLength != sizeof(struct setAlarmArgs))
         return E4E_ERROR;
+    E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, &currentTime);
+    currentTime += pArgs->msecs;
     E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc, E4E_HAL_PWRCTRL_State_OFF);
-    return E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, pArgs->msecs);
+    return E4E_HAL_RTC_setAlarm(&pHalSystem->rtcDesc, currentTime);
 }
 
 int getTimeCallback(void* payload, size_t payloadLength)

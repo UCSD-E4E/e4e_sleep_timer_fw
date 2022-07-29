@@ -116,6 +116,7 @@ int main(void)
 
 
   // Initialize parser
+  E4E_HAL_PwrCtrl_setState(&pHalSystem->onboardComputerDesc, E4E_HAL_PWRCTRL_State_ON);
   E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_SET_ALARM, setAlarmCallback);
   E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_GET_TIME, getTimeCallback);
   E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_CLEAR_ALARM, clearAlarmCallback);
