@@ -23,13 +23,28 @@ int setAlarmCallback(void* payload, size_t payloadLength)
 
 int getTimeCallback(void* payload, size_t payloadLength)
 {
-    struct getTimeArgs {
-        uint32_t secs;
-    };
-    struct getTimeArgs* pArgs = (struct getTimeArgs*) payload;
-    if(payloadLength != sizeof(struct getTimeArgs))
-        return E4E_ERROR;
-    return E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, pArgs ->secs* 1000);
+	int64_t currentTime;
+	uint8_t msgBuffer[14] = {0};
+
+	struct msgLayout{
+		E4E_BinaryPacket_Header_t header;
+		int64_t currentTime;
+	} __attribute__((packed));
+
+	struct msgLayout* msg = (struct msgLayout*)msgBuffer;
+
+    if(E4E_ERROR == E4E_HAL_RTC_getTime(&pHalSystem->rtcDesc, &currentTime))
+    {
+    	currentTime = 0;
+    }
+
+    msg->header.start = 0xEBE4;
+    msg->header.length = 14;
+    msg->header.cmd_id = E4E_BinaryPacket_CCMD_GET_TIME_ACK;
+    memcpy(&msg->currentTime, &currentTime, sizeof(int64_t));
+    assert(sizeof(struct msgLayout) == 14);
+
+    return E4E_HAL_Serial_write(&pHalSystem->debugSerialDesc, msgBuffer, 14, 1000);
 }
 
 int clearAlarmCallback(void* payload, size_t payloadLength)

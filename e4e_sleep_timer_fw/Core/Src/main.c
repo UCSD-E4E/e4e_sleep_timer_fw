@@ -147,11 +147,11 @@ int main(void)
 
 	  while(1)
 	  {
-		  if(E4E_ERROR == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc, &nextInputByte, 1, UINT32_MAX))
+		  if(E4E_ERROR == E4E_HAL_Serial_read(&pHalSystem->debugSerialDesc, &nextInputByte, 1, UINT32_MAX))
 		  {
 			  // Reset the parser
 			  E4E_BinaryPacket_reset();
-			  E4E_HAL_Serial_flush(&pHalSystem->commandSerialDesc);
+			  E4E_HAL_Serial_flush(&pHalSystem->debugSerialDesc);
 			  continue;
 		  }
 
