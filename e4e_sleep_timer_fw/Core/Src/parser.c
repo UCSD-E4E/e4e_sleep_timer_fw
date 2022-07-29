@@ -25,6 +25,11 @@ size_t idx = 0;
 
 E4E_BinaryPacket_State_t state = E4E_BinaryPacket_State_SEARCH; // initial state is SEARCH (0)
 
+
+/**
+ * Parser callback function names
+ */
+ParserCallback_t parserCallbackTable[E4E_BinaryPacket_CMD_NELEMS] = {0};
 /**
  * @brief Parses message received and stores in buffer
  * @param char is stored in buffer[]
@@ -73,18 +78,29 @@ int parse(char c) // parse chars one at a time from serial
 			if (idx == pHeader->length) // if all args parsed
 			{
                 E4E_Printf("callfunc\n");
-                ParserCallback_t pCallback;
-                void* payload = (void*)((uint8_t*)buffer + sizeof(header_t));
-                size_t payloadLength = msgLength - sizeof(header_t);
+                void* payload = (void*)((uint8_t*)buffer + sizeof(E4E_BinaryPacket_Header_t));
+                size_t payloadLength = pHeader->length - sizeof(E4E_BinaryPacket_Header_t);
                 int retval = parserCallbackTable[pHeader->cmd_id](payload, payloadLength);
                 if(retval != E4E_OK) { // call callfunc() and check for error
-                    E4E_Printf(stderr, "Error with callfunc()");
+                    E4E_Printf("Error with callfunc()");
                     return E4E_ERROR;
                 }
 		    }
+			break;
 		default:
 			idx = 0;
 			state = E4E_BinaryPacket_State_SEARCH; 
 	}
     return E4E_OK;
+}
+
+void E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD__t cmd_id, ParserCallback_t cb)
+{
+	parserCallbackTable[cmd_id] = cb;
+}
+
+int E4E_BinaryPacket_reset(void)
+{
+	state = E4E_BinaryPacket_State_SEARCH;
+	return E4E_OK;
 }

@@ -2,11 +2,6 @@
 #define GLUE_H
 
 /**
- * Function type for glue functions
- */
-typedef int(*)(void* payload, size_t len) ParserCallback_t;
-
-/**
  * @brief Callback to setAlarm function for parser
  * @param void* is setAlarm parameters from binary packet
  * @param size_t is length of parameter message
@@ -30,13 +25,4 @@ int getTimeCallback(void*, size_t);
  */
 int clearAlarmCallback(void*, size_t);
 
-/**
- * Parser callback function names
- */
-ParserCallback_t parserCallbackTable[NUM_CMD] = 
-{
-    setAlarmCallback,    // SET_ALARM = 0
-    getTimeCallback,    // GET_ALARM = 1
-    clearAlarmCallback,    //CLEAR_ALARM = 2
-};
 #endif

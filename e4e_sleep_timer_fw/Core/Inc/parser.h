@@ -49,11 +49,18 @@ typedef enum E4E_BinaryPacket_CMD_
 } E4E_BinaryPacket_CMD__t;
 
 /**
+ * Function type for glue functions
+ */
+typedef int(*ParserCallback_t)(void*, size_t);
+
+/**
  * @brief Parses message received and stores in buffer
  * @param char is stored in buffer[]
  * @return	E4E_OK if successful, otherwise E4E_ERROR
  */
-
 int parse(char);
 
+void E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD__t cmd_id, ParserCallback_t cb);
+
+int E4E_BinaryPacket_reset(void);
 #endif
