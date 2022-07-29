@@ -30,7 +30,8 @@
 #include <e4e_common.h>
 #include <E4E_ST_App.h>
 #include <stm32g0xx.h>
-
+#include <parser.h>
+#include <callbacks.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,7 +103,6 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 
-  E4E_HAL_System_init();
   int64_t currTime = 0;
 
 
@@ -115,6 +115,10 @@ int main(void)
   }
 
 
+  // Initialize parser
+  E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_SET_ALARM, setAlarmCallback);
+  E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_GET_TIME, getTimeCallback);
+  E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD_CLEAR_ALARM, clearAlarmCallback);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,6 +129,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 #if E4E_APPLICATION_LOGIC == MAIN_APP_LOGIC
+#if 0
 	  if(E4E_ERROR == E4E_ST_App_init(&app, &appConfig))
 	  {
 		  while(1)
@@ -136,6 +141,25 @@ int main(void)
 	  while(1)
 	  {
 		  E4E_ST_App_run(&app);
+	  }
+#endif
+	  uint8_t nextInputByte;
+
+	  while(1)
+	  {
+		  if(E4E_ERROR == E4E_HAL_Serial_read(&pHalSystem->commandSerialDesc, &nextInputByte, 1, UINT32_MAX))
+		  {
+			  // Reset the parser
+			  E4E_BinaryPacket_reset();
+			  E4E_HAL_Serial_flush(&pHalSystem->commandSerialDesc);
+			  continue;
+		  }
+
+		  if(E4E_ERROR == parse(nextInputByte))
+		  {
+			  // Reset the parser
+			  E4E_BinaryPacket_reset();
+		  }
 	  }
 #elif E4E_APPLICATION_LOGIC == SERIAL_DEBUG_LOGIC
 	  // debug logic
