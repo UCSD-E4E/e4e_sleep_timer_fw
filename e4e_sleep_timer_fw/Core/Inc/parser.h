@@ -45,6 +45,7 @@ typedef enum E4E_BinaryPacket_CMD_
     E4E_BinaryPacket_CMD_CLEAR_ALARM, /**< clearAlarm */
     E4E_BinaryPacket_CMD_GET_TIME, /**< getTime */
     E4E_BinaryPacket_CMD_SET_STATE, /**< setState */
+	E4E_BinaryPacket_CCMD_GET_TIME_ACK,
     E4E_BinaryPacket_CMD_NELEMS, /**< Number of commands */
 } E4E_BinaryPacket_CMD__t;
 

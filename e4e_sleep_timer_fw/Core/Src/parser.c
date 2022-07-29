@@ -38,21 +38,22 @@ ParserCallback_t parserCallbackTable[E4E_BinaryPacket_CMD_NELEMS] = {0};
 
 int parse(char c) // parse chars one at a time from serial
 {
+	ParserCallback_t cb = NULL;
 	buffer[idx] = c; // put char in buffer
-    E4E_Printf("char %x\t idx %zu\t", c, idx);
+//    E4E_Printf("char %x\t idx %zu\t", c, idx);
     switch(state)
     {
         case E4E_BinaryPacket_State_SEARCH:
-            E4E_Printf("SEARCH\n");
-            if (buffer[0] == 0xEB)
+//            E4E_Printf("SEARCH\n");
+            if (buffer[0] == 0xE4)
             {
 				if (idx == 0) { // checks that second byte is parsed
                     idx++;
                     return E4E_OK;
-                } else if (buffer[1] == 0xE4) { // if start is 0xE4EB move to header
+                } else if (buffer[1] == 0xEB) { // if start is 0xE4EB move to header
                     state = E4E_BinaryPacket_State_HEADER;
                     idx++;
-                } else if (buffer[1] == 0xEB) { // if second byte might be start
+                } else if (buffer[1] == 0xE4) { // if second byte might be start
                     buffer[0] = buffer[1];
                 } else {
                     idx = 0;
@@ -66,25 +67,37 @@ int parse(char c) // parse chars one at a time from serial
 			{
 				state = E4E_BinaryPacket_State_MSG;
 			}
+            if(pHeader->length == HEADLEN)
+            {
 
-			break;
+            }
+            else
+            {
+            	break;
+            }
 		case E4E_BinaryPacket_State_MSG:
-                    E4E_Printf("MSG\n");
+//                    E4E_Printf("MSG\n");
             if (idx < pHeader->length)
                 {
                 idx++;
-                break;
                 }
 			if (idx == pHeader->length) // if all args parsed
 			{
-                E4E_Printf("callfunc\n");
+//                E4E_Printf("callfunc\n");
                 void* payload = (void*)((uint8_t*)buffer + sizeof(E4E_BinaryPacket_Header_t));
                 size_t payloadLength = pHeader->length - sizeof(E4E_BinaryPacket_Header_t);
-                int retval = parserCallbackTable[pHeader->cmd_id](payload, payloadLength);
+                cb = parserCallbackTable[pHeader->cmd_id];
+                if(NULL == cb)
+                {
+                	break;
+                }
+                int retval = cb(payload, payloadLength);
                 if(retval != E4E_OK) { // call callfunc() and check for error
                     E4E_Printf("Error with callfunc()");
                     return E4E_ERROR;
                 }
+                E4E_BinaryPacket_reset();
+                return E4E_OK;
 		    }
 			break;
 		default:
@@ -102,5 +115,6 @@ void E4E_BinaryPacket_registerCallback(E4E_BinaryPacket_CMD__t cmd_id, ParserCal
 int E4E_BinaryPacket_reset(void)
 {
 	state = E4E_BinaryPacket_State_SEARCH;
+	idx = 0;
 	return E4E_OK;
 }
