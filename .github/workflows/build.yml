@@ -1,0 +1,17 @@
+name: STM32 Build
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      uses: xanderhendriks/action-build-stm32cubeide@v5.0
+      with:
+        project-path: 'e4e_sleep_timer_fw/e4e_sleep_timer_fw'
+        project-target: 'Release'
+    - name: Inspect
+      run: |
+        ls -alh e4e_sleep_timer_fw/e4e_sleep_timer_fw
