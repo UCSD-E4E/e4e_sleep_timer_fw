@@ -14,4 +14,4 @@ jobs:
         project-target: 'Release'
     - name: Inspect
       run: |
-        ls -alh e4e_sleep_timer_fw/e4e_sleep_timer_fw
+        ls -alh e4e_sleep_timer_fw
