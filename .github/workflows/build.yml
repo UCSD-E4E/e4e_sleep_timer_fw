@@ -12,6 +12,9 @@ jobs:
       with:
         project-path: 'e4e_sleep_timer_fw'
         project-target: 'e4e_sleep_timer_fw'
-    - name: Inspect
-      run: |
-        ls -alh e4e_sleep_timer_fw
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: |
+          e4e_sleep_timer_fw/Release/e4e_sleep_timer_fw/*
