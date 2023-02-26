@@ -1,7 +1,7 @@
 # e4e_sleep_timer_fw
 E4E Sleep Timer
 
-Baud Rate: 115200
+Baud Rate: 9600
 
 |Function | STM32 Pinout|
 |--|--|
