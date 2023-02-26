@@ -17,4 +17,4 @@ jobs:
       with:
         name: build
         path: |
-          e4e_sleep_timer_fw/Release/e4e_sleep_timer_fw/*
+          e4e_sleep_timer_fw/Release/e4e_sleep_timer_fw.*
