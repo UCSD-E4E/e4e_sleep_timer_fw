@@ -179,6 +179,20 @@ int main(void)
 	  // debug logic
 #elif E4E_APPLICATION_LOGIC == DEBUG_APP_LOGIC
 	  E4E_DebugApp();
+#elif E4E_APPLICATION_LOGIC == ECHO_APP_LOGIC
+	  uint8_t nextInputByte;
+	  while(1)
+	  {
+		  if(E4E_ERROR == E4E_HAL_Serial_read(&pHalSystem->debugSerialDesc, &nextInputByte, 1, UINT32_MAX))
+		  {
+			  E4E_HAL_Serial_flush(&pHalSystem->debugSerialDesc);
+			  continue;
+		  }
+		  if(E4E_ERROR == E4E_HAL_Serial_write(&pHalSystem->debugSerialDesc, &nextInputByte, 1, UINT32_MAX))
+		  {
+			  continue;
+		  }
+	  }
 #endif
   }
   /* USER CODE END 3 */
